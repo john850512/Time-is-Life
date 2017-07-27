@@ -1,0 +1,82 @@
+[
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_multiple_placemarks.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_multiple_placemarks.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_cdata.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_cdata.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_poly_style_boolean_alpha.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_poly_style_boolean_alpha.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_draw_order_ground_overlay.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_draw_order_ground_overlay.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_inline_style.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_inline_style.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_extended_data.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_extended_data.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_ground_overlay_color.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_ground_overlay_color.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_ground_overlay.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_ground_overlay.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_basic_folder.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_basic_folder.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_unsupported.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_unsupported.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_visibility_ground_overlay.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_visibility_ground_overlay.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_nested_folders.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_nested_folders.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_unknwown_folder.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_unknwown_folder.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_poly_style_boolean_numeric.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_poly_style_boolean_numeric.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_document_nest.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_document_nest.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_basic_placemark.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_basic_placemark.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_multigeometry_placemarks.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_multigeometry_placemarks.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_ballon_gx_prefix.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_ballon_gx_prefix.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_default_balloon.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_default_balloon.kml"
+    },
+    {
+        "merged": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\build\\intermediates\\res\\merged\\debug\\raw\\amu_nested_multigeometry.kml",
+        "source": "C:\\Users\\user\\Desktop\\android-maps-utils-master\\library\\res\\raw\\amu_nested_multigeometry.kml"
+    }
+]
