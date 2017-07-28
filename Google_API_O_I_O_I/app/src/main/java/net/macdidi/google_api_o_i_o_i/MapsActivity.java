@@ -53,6 +53,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         btn = (Button)findViewById(R.id.btn);
         btn.setOnClickListener(myListner);
 
+
     }
     @Override
     public void onMapReady(GoogleMap googleMap) {
