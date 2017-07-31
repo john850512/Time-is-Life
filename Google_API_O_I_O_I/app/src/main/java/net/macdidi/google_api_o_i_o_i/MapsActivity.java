@@ -3,9 +3,10 @@ package net.macdidi.google_api_o_i_o_i;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -20,26 +21,30 @@ import com.google.maps.android.PolyUtil;
 import java.util.ArrayList;
 
 import static net.macdidi.google_api_o_i_o_i.R.id.map;
+import static net.macdidi.google_api_o_i_o_i.R.id.testLatInput;
+import static net.macdidi.google_api_o_i_o_i.R.id.testLngInput;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
     //中途點的經緯度資訊
     //一筆的格式為:$ID$經度:緯度 經度:緯度 ....
     private static String GeoStr= "$1$120.29035,22.73327 120.29050000000001,22.733300000000003 120.29055000000001,22.73253 120.29054000000001,22.73243 120.29068000000001,22.732480000000002 120.29127000000001,22.732450000000004 120.29151000000002,22.73243 120.29240000000001,22.73222 120.29207000000001,22.729870000000002 120.29196,22.728890000000003 120.29167000000001,22.726820000000004 120.29131000000001,22.724230000000002 120.29117000000001,22.72315 120.29104000000001,22.72212 120.29102,22.721670000000003 120.29106000000002,22.721380000000003 120.29125,22.72068 120.29160000000002,22.71949 120.29191000000002,22.718500000000002 120.29219,22.71769 120.29256000000001,22.716730000000002 120.29288000000001,22.715940000000003 120.29362,22.714250000000003 120.29397000000002,22.71339 120.29418000000001,22.71282 120.29432000000001,22.712470000000003 120.29447,22.71226 120.29506,22.71159 120.29556000000001,22.711000000000002 120.29610000000001,22.710400000000003 120.29692000000001,22.70954 120.29748000000001,22.70898 120.29778,22.708740000000002 120.29806,22.708540000000003 120.29841,22.70832 120.29869000000001,22.708190000000002 120.299,22.708060000000003 120.29932000000001,22.70794 120.29959000000001,22.707880000000003 120.29984,22.70785 120.30096,22.70786 120.30213,22.707890000000003 120.30239000000002,22.707900000000002 120.30239000000002,22.70812 120.30238000000001,22.708380000000002 120.30238000000001,22.70849";
-    //一個點的資料結構:ID、經度、緯度
+    //單一個點的資料結構:ID、經度、緯度
     class GeoInfo{
         int id;
         double Lng;
         double Lat;
-        //constructor
-        GeoInfo(){
+        GeoInfo(){//constructor
             Lng = 0;
             Lat = 0;
         }
     };
-    private ArrayList<GeoInfo> GeoPoint = new ArrayList<GeoInfo>();//所有點(包含不同路徑)的ID、經度、緯度
+    private ArrayList<GeoInfo> GeoPoint = new ArrayList<GeoInfo>();//所有點(包含不同路徑)的LIST
     private GoogleMap mMap;
     private Button btn;
     private LatLng StartPoint,EndPoint;//路線起點、終點marker
+
+    private EditText testLatInput,testLngInput;
+    private ArrayList<LatLng> Single_Path_Point_Info = new ArrayList<LatLng>();//isOnPathLocation Function的參數(一條路徑)
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,13 +57,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         EndPoint = new LatLng(0,0);
         btn = (Button)findViewById(R.id.btn);
         btn.setOnClickListener(myListner);
-
-
+        testLatInput = (EditText) findViewById(R.id.testLatInput);
+        testLngInput = (EditText) findViewById(R.id.testLngInput);
     }
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        String[] temp = GeoStr.split("\\$");
+        String[] temp = GeoStr.split("\\$");//將字串切割成一條條路徑
         ArrayList<Integer> receiveID = new ArrayList<Integer>(); //儲存所有路徑的id編號 每一個元素都是一條的ID
         ArrayList<String> SingleGeoStr = new ArrayList<String>(); //儲存所有的所有 每一個元素都是一條完整路徑
 
@@ -84,6 +89,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 p.Lng = Double.parseDouble(spiltGeoInfo[j].split(",")[0]);
                 p.Lat = Double.parseDouble(spiltGeoInfo[j].split(",")[1]);
                 GeoPoint.add(p);
+                Single_Path_Point_Info.add(new LatLng(p.Lat,p.Lng));
                 //Log.d("myTag",GeoPoint.get(j).id+" " + GeoPoint.get(j).Lng+ " " + GeoPoint.get(j).Lat +"\n");
             }
         }
@@ -98,6 +104,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //t.show();
             //按下按鈕後會畫出路線
             DrawLine();
+
+            LatLng testPoint = new LatLng(Double.parseDouble(testLatInput.getText().toString()),
+                                            Double.parseDouble(testLngInput.getText().toString()));
+            //在30公尺內提示
+            if(PolyUtil.isLocationOnPath(testPoint,Single_Path_Point_Info,false,30.0f)){
+                Toast t = Toast.makeText(MapsActivity.this,"在範圍內",Toast.LENGTH_LONG);
+                t.show();
+            }
+            else{
+                Toast t = Toast.makeText(MapsActivity.this,"不在範圍內",Toast.LENGTH_LONG);
+                t.show();
+            }
+
+
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(StartPoint,13));
         }
     };
