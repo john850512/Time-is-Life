@@ -1,4 +1,6 @@
 <resources>
-    <string name="app_name">Google_API_O_I_O_I</string>
+    <string name="app_name">Time is Life</string>
     <string name="title_activity_maps">Time is Life</string>
+    <drawable name="clr_normal">#e1e1e1</drawable>
+    <drawable name="clr_pressed">#535353</drawable>
 </resources>

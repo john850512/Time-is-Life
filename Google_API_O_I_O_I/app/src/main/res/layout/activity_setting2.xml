@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_setting2"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="net.macdidi.google_api_o_i_o_i.SettingActivity">
+
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:text="Name"
+        android:ems="8"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="100dp"
+        android:id="@+id/editText01" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:text="Name"
+        android:ems="8"
+        android:id="@+id/editText02"
+        android:layout_alignBaseline="@+id/textView02"
+        android:layout_alignBottom="@+id/textView02"
+        android:layout_alignParentEnd="true" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:text="Name"
+        android:ems="8"
+        android:id="@+id/editText03"
+        android:layout_alignBaseline="@+id/textView03"
+        android:layout_alignBottom="@+id/textView03"
+        android:layout_alignParentEnd="true" />
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:text="Name"
+        android:ems="8"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/editText01"
+        android:layout_marginTop="27dp"
+        android:id="@+id/editText00" />
+    <TextView
+        android:text="提示訊息內容"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="51dp"
+        android:id="@+id/textView02"
+        android:layout_below="@+id/editText01"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="26dp" />
+    <TextView
+        android:text="道路判斷距離"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:id="@+id/textView03"
+        android:layout_below="@+id/editText02"
+        android:layout_alignStart="@+id/textView02" />
+
+    <TextView
+        android:text="提示訊息標題"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView01"
+        android:layout_alignBaseline="@+id/editText01"
+        android:layout_alignBottom="@+id/editText01"
+        android:layout_alignStart="@+id/textView02" />
+
+    <TextView
+        android:text="下拉訊息內容"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/textView01"
+        android:layout_marginTop="42dp"
+        android:id="@+id/textView00" />
+    <Button
+        android:text="儲存設定"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editText03"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="46dp"
+        android:id="@+id/button4" />
+    <Button
+        android:text="回復預設值"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/button5"
+        android:layout_below="@+id/button4"
+        android:layout_centerHorizontal="true" />
+
+
+</RelativeLayout>

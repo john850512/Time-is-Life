@@ -1,8 +1,10 @@
 package net.macdidi.google_api_o_i_o_i;
 
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,10 +23,8 @@ import com.google.maps.android.PolyUtil;
 import java.util.ArrayList;
 
 import static net.macdidi.google_api_o_i_o_i.R.id.map;
-import static net.macdidi.google_api_o_i_o_i.R.id.testLatInput;
-import static net.macdidi.google_api_o_i_o_i.R.id.testLngInput;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends ActionBarActivity implements OnMapReadyCallback {
     //中途點的經緯度資訊
     //一筆的格式為:$ID$經度:緯度 經度:緯度 ....
     private static String GeoStr= "$1$120.29035,22.73327 120.29050000000001,22.733300000000003 120.29055000000001,22.73253 120.29054000000001,22.73243 120.29068000000001,22.732480000000002 120.29127000000001,22.732450000000004 120.29151000000002,22.73243 120.29240000000001,22.73222 120.29207000000001,22.729870000000002 120.29196,22.728890000000003 120.29167000000001,22.726820000000004 120.29131000000001,22.724230000000002 120.29117000000001,22.72315 120.29104000000001,22.72212 120.29102,22.721670000000003 120.29106000000002,22.721380000000003 120.29125,22.72068 120.29160000000002,22.71949 120.29191000000002,22.718500000000002 120.29219,22.71769 120.29256000000001,22.716730000000002 120.29288000000001,22.715940000000003 120.29362,22.714250000000003 120.29397000000002,22.71339 120.29418000000001,22.71282 120.29432000000001,22.712470000000003 120.29447,22.71226 120.29506,22.71159 120.29556000000001,22.711000000000002 120.29610000000001,22.710400000000003 120.29692000000001,22.70954 120.29748000000001,22.70898 120.29778,22.708740000000002 120.29806,22.708540000000003 120.29841,22.70832 120.29869000000001,22.708190000000002 120.299,22.708060000000003 120.29932000000001,22.70794 120.29959000000001,22.707880000000003 120.29984,22.70785 120.30096,22.70786 120.30213,22.707890000000003 120.30239000000002,22.707900000000002 120.30239000000002,22.70812 120.30238000000001,22.708380000000002 120.30238000000001,22.70849";
@@ -43,7 +43,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Button btn;
     private LatLng StartPoint,EndPoint;//路線起點、終點marker
 
+    //test
     private EditText testLatInput,testLngInput;
+    private double tolerance;
     private ArrayList<LatLng> Single_Path_Point_Info = new ArrayList<LatLng>();//isOnPathLocation Function的參數(一條路徑)
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +61,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         btn.setOnClickListener(myListner);
         testLatInput = (EditText) findViewById(R.id.testLatInput);
         testLngInput = (EditText) findViewById(R.id.testLngInput);
+        //set icon with actionbar
+        ActionBar menu = getSupportActionBar();
+        menu.setDisplayShowHomeEnabled(true);
+        menu.setIcon(R.mipmap.ic_launcher);
+
+        SharedPreferences sharedPreferences = getSharedPreferences("Data" , MODE_PRIVATE);
+        tolerance = sharedPreferences.getFloat("tolerance",15.0f);
     }
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -108,7 +117,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             LatLng testPoint = new LatLng(Double.parseDouble(testLatInput.getText().toString()),
                                             Double.parseDouble(testLngInput.getText().toString()));
             //在30公尺內提示
-            if(PolyUtil.isLocationOnPath(testPoint,Single_Path_Point_Info,false,30.0f)){
+            if(PolyUtil.isLocationOnPath(testPoint,Single_Path_Point_Info,false,tolerance)){
                 Toast t = Toast.makeText(MapsActivity.this,"在範圍內",Toast.LENGTH_LONG);
                 t.show();
             }

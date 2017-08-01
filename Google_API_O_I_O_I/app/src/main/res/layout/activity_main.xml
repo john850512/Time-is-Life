@@ -5,7 +5,6 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     tools:context="net.macdidi.google_api_o_i_o_i.MainActivity"
     android:background="@drawable/bg">
 
@@ -32,37 +31,44 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="60dp"
         android:layout_alignParentEnd="true"
+        android:background="@drawable/login_button_selector"
         android:textOn="結束行駛"
         android:textOff="開始行駛"
         android:checked="false" />
-
+    <!---setting button-->
     <Button
-        android:text="操作說明"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/settingbtn_selector"
+        android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
+        android:layout_marginTop="18dp"
+        android:layout_marginRight="5dp"
         android:id="@+id/button"
-        android:layout_width="wrap_content" />
+         />
 
     <Button
         android:text="按我"
         android:id="@+id/Notify_Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="18dp"
-        android:layout_above="@+id/button"
+        android:background="@drawable/login_button_selector"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="18dp"/>
 
     <Button
         android:text="關於我們"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/login_button_selector"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:id="@+id/About_us" />
+        android:id="@+id/About_us"
+        android:layout_marginBottom="18dp"/>
 
 
     <ImageView
@@ -133,6 +139,7 @@
         android:layout_below="@+id/textView"
         android:layout_alignStart="@+id/textView"
         android:textColor="@android:color/background_light"
+        android:layout_marginTop="20dp"
         android:textSize="20sp" />
 
 </RelativeLayout>

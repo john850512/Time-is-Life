@@ -4,18 +4,19 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.ScaleAnimation;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Switch;
@@ -27,14 +28,23 @@ import java.io.DataOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
+import static net.macdidi.google_api_o_i_o_i.R.id.button;
 import static net.macdidi.google_api_o_i_o_i.R.id.imageView;
 
 public class MainActivity extends AppCompatActivity  {
     private int socketerr = 0;
     private Button Notify_Button ;
+    private Button settingBtn;
     private ToggleButton toggleButton;
     private Button redbutton ;
     private Switch switch1;
+
+    //golbal variable(saved in xml)
+    private String hintText;
+    private String hintContentTitle;
+    private String hintContentText;
+    private Double tolerance;
+
     ImageView smallred;
     ImageView smallgreen;
     Socket m_socket = null;
@@ -49,8 +59,33 @@ public class MainActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //set icon with actionbar
+        ActionBar menu = getSupportActionBar();
+        menu.setDisplayShowHomeEnabled(true);
+        menu.setIcon(R.mipmap.ic_launcher);
+
         Thread test = new Thread(clientSocket);
         test.start();
+
+        //讀取數據
+        SharedPreferences sharedPreferences = getSharedPreferences("Data" , MODE_PRIVATE);
+        int fir_write = 0;
+        fir_write = sharedPreferences.getInt("fir_write",0);
+        //Toast.makeText(MainActivity.this,String.valueOf(fir_write),Toast.LENGTH_SHORT).show();
+        hintText = sharedPreferences.getString("hintText","訊息提示視窗");
+        hintContentTitle = sharedPreferences.getString("hintContentTitle","Time is Life");
+        hintContentText = sharedPreferences.getString("hintContentText","hintContentText");
+        tolerance = Double.valueOf(sharedPreferences.getFloat("tolerance",10.0f));
+        //第一次開啟APP(之前沒寫過檔案)
+        if(fir_write == 0)
+        {
+            Toast.makeText(MainActivity.this,"第一次檔案寫入成功",Toast.LENGTH_SHORT).show();
+            sharedPreferences.edit().putInt("fir_write", 1).apply();
+            sharedPreferences.edit().putString("hintText", "訊息提示視窗").apply();
+            sharedPreferences.edit().putString("hintContentTitle", "提示訊息標題").apply();
+            sharedPreferences.edit().putString("hintContentText", "提示訊息內容").apply();
+            sharedPreferences.edit().putFloat("tolerance", 10.0f).apply();
+        }
 
         Notify_Button = (Button)findViewById(R.id.Notify_Button);
         Notify_Button.setOnClickListener(new View.OnClickListener(){
@@ -69,7 +104,7 @@ public class MainActivity extends AppCompatActivity  {
 
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
                     Notification.BigPictureStyle BigPicture = new Notification.BigPictureStyle();
-                    BigPicture.setBigContentTitle("我居然會傳大圖片！");
+                    BigPicture.setBigContentTitle(hintText);
                     //先來設定顯示的大圖片
                     Bitmap bitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.test)).getBitmap();
                     //丟進去
@@ -80,8 +115,8 @@ public class MainActivity extends AppCompatActivity  {
                             .setTicker("通知訊息顯示在這裡")
                             .setWhen(System.currentTimeMillis()) //設置發生時間
                             .setAutoCancel(true)   // 設置通知被使用者點擊後是否清除  //notification.flags = Notification.FLAG_AUTO_CANCEL;
-                            .setContentTitle("下拉的標題")
-                            .setContentText("下拉的內容")
+                            .setContentTitle(hintContentTitle)
+                            .setContentText(hintContentText)
                             //.setOngoing(true)      //true使notification變為ongoing，用戶不能手動清除// notification.flags = Notification.FLAG_ONGOING_EVENT; notification.flags = Notification.FLAG_NO_CLEAR;
                             .setDefaults(Notification.DEFAULT_ALL) //使用所有默認值，比如聲音，震動，閃屏等等
                             //.setDefaults(Notification.DEFAULT_VIBRATE) //使用默認手機震動提示
@@ -116,7 +151,8 @@ public class MainActivity extends AppCompatActivity  {
 //              mNotificationManager.cancelAll();
             }
         });
-
+        settingBtn = (Button)findViewById(button);//Setting Button
+        redbutton = (Button)findViewById(R.id.button3);//Center Circle Button
         smallred = (ImageView) findViewById(imageView);
         smallgreen = (ImageView) findViewById(R.id.imageView2);
         toggleButton = (ToggleButton) findViewById(R.id.toggleButton);
@@ -159,8 +195,16 @@ public class MainActivity extends AppCompatActivity  {
                 }
             }
         });
-
-        redbutton = (Button)findViewById(R.id.button3);
+        //Setting Button
+        settingBtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                Intent Maps = new Intent();
+                Maps.setClass(MainActivity.this,SettingActivity.class);
+                startActivity(Maps);
+            }
+        });
+        //Center Circle Button
         redbutton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
