@@ -20,25 +20,8 @@
         android:textSize="40sp"
         android:textColor="@android:color/holo_green_light" />
 
-    <ToggleButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/toggleButton"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_toRightOf="@+id/hidden"
-        android:layout_marginTop="20dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="60dp"
-        android:layout_alignParentEnd="true"
-        android:background="@drawable/login_button_selector"
-        android:textOn="結束行駛"
-        android:textOff="開始行駛"
-        android:checked="false" />
     <!---setting button-->
     <Button
-        android:layout_width="50dp"
-        android:layout_height="50dp"
         android:background="@drawable/settingbtn_selector"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
@@ -46,7 +29,8 @@
         android:layout_marginTop="18dp"
         android:layout_marginRight="5dp"
         android:id="@+id/button"
-         />
+        android:layout_width="70dp"
+        android:layout_height="70dp" />
 
     <Button
         android:text="按我"
@@ -118,18 +102,6 @@
         android:layout_alignBottom="@+id/hidden"
         android:layout_toEndOf="@+id/About_us" />
 
-    <Switch
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/switch1"
-        android:textOn="開始行駛"
-        android:textOff="結束行駛"
-        android:splitTrack="false"
-        android:text="道路行駛"
-        android:checked="false"
-        android:layout_below="@+id/toggleButton"
-        android:layout_alignStart="@+id/toggleButton" />
-
     <Button
         android:text="救護車即將經過！！"
         android:id="@+id/button3"
@@ -141,5 +113,17 @@
         android:textColor="@android:color/background_light"
         android:layout_marginTop="20dp"
         android:textSize="20sp" />
+
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/switch1"
+        android:splitTrack="false"
+        android:text="開始行駛"
+        android:checked="false"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="70dp"
+        android:layout_marginRight="80dp" />
 
 </RelativeLayout>

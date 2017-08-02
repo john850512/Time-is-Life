@@ -12,7 +12,7 @@ import android.widget.EditText;
 import static net.macdidi.google_api_o_i_o_i.R.id.testLatInput;
 
 public class SettingActivity extends AppCompatActivity {
-    private EditText EditText00,EditText01,EditText02,EditText03;
+    private EditText EditText00,EditText01,EditText02,EditText03,EditText04,EditText05;
     private Button SettingBtn,RecoverBtn;
     SharedPreferences sharedPreferences;
     @Override
@@ -27,9 +27,11 @@ public class SettingActivity extends AppCompatActivity {
         EditText01 = (EditText) findViewById(R.id.editText01);
         EditText02 = (EditText) findViewById(R.id.editText02);
         EditText03 = (EditText) findViewById(R.id.editText03);
+        EditText04 = (EditText) findViewById(R.id.editText04);
+        EditText05 = (EditText) findViewById(R.id.editText05);
         SettingBtn = (Button) findViewById(R.id.button4);
-        SettingBtn.setOnClickListener(Setting);
         RecoverBtn = (Button) findViewById(R.id.button5);
+        SettingBtn.setOnClickListener(Setting);
         RecoverBtn.setOnClickListener(Recover);
         //設置edit text中的value
         sharedPreferences = getSharedPreferences("Data" , MODE_PRIVATE);
@@ -37,6 +39,8 @@ public class SettingActivity extends AppCompatActivity {
         EditText01.setText(sharedPreferences.getString("hintContentTitle","Not Value"));
         EditText02.setText(sharedPreferences.getString("hintContentText","Not Value"));
         EditText03.setText(String.valueOf(sharedPreferences.getFloat("tolerance",10.0f)));
+        EditText04.setText(sharedPreferences.getString("IP","127.0.0.1"));
+        EditText05.setText(String.valueOf(sharedPreferences.getInt("port",2222)));
     }
     private Button.OnClickListener Setting = new Button.OnClickListener(){
         public void onClick(View v){
@@ -44,10 +48,10 @@ public class SettingActivity extends AppCompatActivity {
             sharedPreferences.edit().putString("hintContentTitle", EditText01.getText().toString()).apply();
             sharedPreferences.edit().putString("hintContentText",EditText02.getText().toString()).apply();
             sharedPreferences.edit().putFloat("tolerance", Float.parseFloat(EditText03.getText().toString())).apply();
-
+            sharedPreferences.edit().putString("IP",EditText04.getText().toString()).apply();
+            sharedPreferences.edit().putInt("port", Integer.parseInt(EditText05.getText().toString())).apply();
             Intent Main = new Intent();
             Main.setClass(SettingActivity.this,MainActivity.class);
-            startActivity(Main);
             SettingActivity.this.finish();
         }
     };
@@ -57,9 +61,10 @@ public class SettingActivity extends AppCompatActivity {
             sharedPreferences.edit().putString("hintContentTitle", "Time is Life").apply();
             sharedPreferences.edit().putString("hintContentText", "您有提示訊息請查看").apply();
             sharedPreferences.edit().putFloat("tolerance", 10.0f).apply();
+            sharedPreferences.edit().putString("IP", "127.0.0.1").apply();
+            sharedPreferences.edit().putInt("port", 2222).apply();
             Intent Main = new Intent();
             Main.setClass(SettingActivity.this,MainActivity.class);
-            startActivity(Main);
             SettingActivity.this.finish();
         }
     };
