@@ -38,7 +38,8 @@ public class MainActivity extends AppCompatActivity  {
     private int socketerr = 0;
     private Button Notify_Button;
     private Button settingBtn;
-    private Button redbutton;
+    private Button redbutton,greenbutton;
+    private Button aboutBtn;
     private ToggleButton toggleButton;
     private Switch switch1;
 
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity  {
     private String hintContentText;
     private String IP;
     private int port;
+    private int cur_stat;//當前狀態對應的圓形按鈕顏色，-1代表未啟動，0代表正常(GREEN)，1代表有救護車經過(RED)
 
     ImageView smallred;
     ImageView smallgreen;
@@ -81,12 +83,17 @@ public class MainActivity extends AppCompatActivity  {
         settingBtn.setOnClickListener(openSettingActivity);
         redbutton = (Button)findViewById(R.id.button3);//Center Circle Button
         redbutton.setOnClickListener(openMapActivity);
+        greenbutton= (Button)findViewById(R.id.button2);//Center Circle Button
+        greenbutton.setVisibility(View.VISIBLE);
+        redbutton.setVisibility(View.INVISIBLE);
+
         smallred = (ImageView) findViewById(imageView);
         smallgreen = (ImageView) findViewById(R.id.imageView2);
         switch1 = (Switch)findViewById(R.id.switch1);
         switch1.setOnClickListener(switch_colorChange);
-
-        animateButton();
+        aboutBtn = (Button)findViewById(R.id.About_us);
+        aboutBtn.setOnClickListener(About);
+        cur_stat = -1;
     }
 
     private void firRecord(){
@@ -113,6 +120,21 @@ public class MainActivity extends AppCompatActivity  {
         port = sharedPreferences.getInt("port",2222);
         return fir_write;
     }
+    private Button.OnClickListener About = new Button.OnClickListener(){
+        @Override
+        public void onClick(View v) {
+            if(cur_stat == 0) {
+                cur_stat = 1;
+                greenbutton.setVisibility(View.VISIBLE);
+                redbutton.setVisibility(View.GONE);
+            }
+            else if(cur_stat == 1){
+                cur_stat = 0;
+                greenbutton.setVisibility(View.GONE);
+                redbutton.setVisibility(View.VISIBLE);
+            }
+        }
+    };
     private Button.OnClickListener openSettingActivity = new Button.OnClickListener(){
         @Override
         public void onClick(View v) {
@@ -137,17 +159,25 @@ public class MainActivity extends AppCompatActivity  {
                 //Toast.makeText(MainActivity.this,"YES",Toast.LENGTH_SHORT).show();
                 // int id = getResources().getIdentifier("@drawable/" + "smallgreenbutton.png", null, getPackageName());
                 //red_green_switch.setImageResource(id);
+                cur_stat = 1;
                 smallred.setVisibility(View.GONE);
                 smallgreen.setVisibility(View.VISIBLE);
                 switch1.setText("結束行駛");
+                greenbutton.setText("系統正常執行中");
+
+                animateButton_green();
             }
             else {
                 //Toast.makeText(MainActivity.this,"NO",Toast.LENGTH_SHORT).show();
                 //int id = getResources().getIdentifier("@drawable/" + "smallredbutton.png", null, getPackageName());
                 //red_green_switch.setImageResource(id);
+                cur_stat = -1;
                 smallred.setVisibility(View.VISIBLE);
                 smallgreen.setVisibility(View.GONE);
+                greenbutton.setVisibility(View.VISIBLE);
+                redbutton.setVisibility(View.GONE);
                 switch1.setText("開始行駛");
+                greenbutton.setText("系統尚未執行");
             }
         }
     };
@@ -273,20 +303,17 @@ public class MainActivity extends AppCompatActivity  {
         }
     }
     //anim
-    public void didTapPlayButton(View view) {
-        animateButton();
-    }
-
-    public void animateButton() {
+    public void animateButton_red() {
         // Load the animation
+        // anim參數設定
         final Animation myAnim = AnimationUtils.loadAnimation(this, R.anim.bounce);
         double animationDuration = 1.6 * 1000;
         myAnim.setDuration((long)animationDuration);
-
         // Use custom animation interpolator to achieve the bounce effect
         MyBounceInterpolator interpolator = new MyBounceInterpolator(0.14, 30.0);//Amplitude,Frequency
-
         myAnim.setInterpolator(interpolator);
+
+
 
         // Animate the button
         //Button button = (Button)findViewById(R.id.button3);
@@ -299,7 +326,34 @@ public class MainActivity extends AppCompatActivity  {
             public void onAnimationRepeat(Animation arg0) {}
             @Override
             public void onAnimationEnd(Animation arg0) {
-                animateButton();
+                if(cur_stat == 0) animateButton_red();
+                else if(cur_stat == 1) animateButton_green();
+            }
+        });
+    }
+    public void animateButton_green() {
+        // Load the animation
+        // anim參數設定
+        final Animation myAnim = AnimationUtils.loadAnimation(this, R.anim.bounce);
+        double animationDuration = 3.0 * 1000;
+        myAnim.setDuration((long)animationDuration);
+        // Use custom animation interpolator to achieve the bounce effect
+        MyBounceInterpolator interpolator = new MyBounceInterpolator(0.14, 30.0);//Amplitude,Frequency
+        myAnim.setInterpolator(interpolator);
+
+        // Animate the button
+        //Button button = (Button)findViewById(R.id.button3);
+        greenbutton.startAnimation(myAnim);
+        // Run button animation again after it finished
+        myAnim.setAnimationListener(new Animation.AnimationListener(){
+            @Override
+            public void onAnimationStart(Animation arg0) {}
+            @Override
+            public void onAnimationRepeat(Animation arg0) {}
+            @Override
+            public void onAnimationEnd(Animation arg0) {
+                if(cur_stat == 1) animateButton_green();
+                else if(cur_stat == 0)  animateButton_red();
             }
         });
     }

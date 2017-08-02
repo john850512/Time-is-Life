@@ -113,7 +113,17 @@
         android:textColor="@android:color/background_light"
         android:layout_marginTop="20dp"
         android:textSize="20sp" />
-
+    <Button
+        android:text="系統尚未執行"
+        android:id="@+id/button2"
+        android:background="@drawable/btn1"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_below="@+id/textView"
+        android:layout_alignStart="@+id/textView"
+        android:textColor="@android:color/background_light"
+        android:layout_marginTop="20dp"
+        android:textSize="20sp" />
     <Switch
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -125,5 +135,7 @@
         android:layout_alignParentRight="true"
         android:layout_marginTop="70dp"
         android:layout_marginRight="80dp" />
+
+
 
 </RelativeLayout>
