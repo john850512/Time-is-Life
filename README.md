@@ -4,4 +4,3 @@
 
 【目前功能尚在實作中。。。】
 
-![](http://i.imgur.com/TmiTtmU.png)
