@@ -25,12 +25,20 @@ import android.widget.Switch;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.drafts.Draft;
+import org.java_websocket.drafts.Draft_17;
+import org.java_websocket.handshake.ServerHandshake;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 
-import static android.R.attr.port;
+import static android.R.attr.tag;
+import static com.google.android.gms.analytics.internal.zzy.cl;
 import static net.macdidi.google_api_o_i_o_i.R.id.button;
 import static net.macdidi.google_api_o_i_o_i.R.id.imageView;
 
@@ -51,16 +59,19 @@ public class MainActivity extends AppCompatActivity  {
     private int port;
     private int cur_stat;//當前狀態對應的圓形按鈕顏色，-1代表未啟動，0代表正常(GREEN)，1代表有救護車經過(RED)
 
-    ImageView smallred;
-    ImageView smallgreen;
-    Socket m_socket = null;
-    String in = "";
+    private ImageView smallred;
+    private ImageView smallgreen;
+    private Socket m_socket = null;
+    private String webSocket_input = "";//websocket連線方式接收到的資料
+    private String in = "";//ㄧ般socket的連線方式收到的資料
     long[] vibrate = {0,100,200,300};   //震動時間長度參數
 
     //Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION); //音樂Uri參數
     // uri = Uri.parse("file:///sdcard/Notifications/hangout_ringtone.m4a");
     // uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.ring);
 
+    private WebSocketClient client;
+    private Draft selectDraft;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,9 +82,9 @@ public class MainActivity extends AppCompatActivity  {
         ActionBar menu = getSupportActionBar();
         menu.setDisplayShowHomeEnabled(true);
         menu.setIcon(R.mipmap.ic_launcher);
-
-        Thread test = new Thread(clientSocket);
-        test.start();
+        //連線
+        Thread connection = new Thread(clientSocket);
+        connection.start();
 
         if(readReacord() == 0)firRecord();//第一次開啟APP(之前沒寫過檔案)
 
@@ -95,6 +106,89 @@ public class MainActivity extends AppCompatActivity  {
         aboutBtn.setOnClickListener(About);
         cur_stat = -1;
     }
+    //连接
+    private void connect() {
+        new Thread(){
+            @Override
+            public void run() {
+                client.connect();
+            }
+        }.start();
+    }
+    //断开连接
+    private void closeConnect() {
+        try {
+            client.close();
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+        finally{
+            //websocket server 和 client 都不可reuse
+            client = null;
+        }
+    }
+    //websocket 初始化
+    private void initSocketClient() throws URISyntaxException {
+        if(client == null){
+            client = new WebSocketClient(URI.create("ws://"+IP+":"+port+"/WebSocket/websocket")) {
+                //UI更新必須使用mainthread或UI thread
+                @Override
+                public void onOpen(ServerHandshake serverHandshake) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this,"[websocket]連線成功",Toast.LENGTH_SHORT).show();
+                            //连接成功
+                            Log.d("tag","opened connection");
+                        }
+                    });
+                }
+                @Override
+                public void onMessage(final String s) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this,s,Toast.LENGTH_SHORT).show();
+                            webSocket_input = s;
+                            Log.d("tag",s);
+                            //服务端消息
+                            /*
+                                                        initmsg += s + "\n";
+                                                        Message msg = new Message();
+                                                        msg.what = 1;
+                                                        myhandler.sendMessage(msg);
+                                                        Log.d(tag,"received:" + s);
+                                                        */
+                        }
+                    });
+                }
+                @Override
+                public void onClose(int i, String s, boolean remote) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this,"[websocket]結束連線",Toast.LENGTH_SHORT).show();
+
+                            //连接断开，remote判定是客户端断开还是服务端断开
+                            //Log.d(tag,"Connection closed by " + ( remote ? "remote peer" : "us" ) + ", info=" + s);
+                            //
+                            //closeConnect();
+                        }
+                    });
+                }
+                @Override
+                public void onError(final Exception e) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this,"[錯誤訊息]"+e,Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            };
+        }
+    }
 
     private void firRecord(){
         SharedPreferences sharedPreferences = getSharedPreferences("Data" , MODE_PRIVATE);
@@ -103,8 +197,8 @@ public class MainActivity extends AppCompatActivity  {
         sharedPreferences.edit().putString("hintContentTitle", "Time is Life").apply();
         sharedPreferences.edit().putString("hintContentText", "您有提示訊息請查看").apply();
         sharedPreferences.edit().putFloat("tolerance", 10.0f).apply();
-        sharedPreferences.edit().putString("IP", "127.0.0.1").apply();
-        sharedPreferences.edit().putInt("port", 2222).apply();
+        sharedPreferences.edit().putString("IP", "192.168.1.143").apply();
+        sharedPreferences.edit().putInt("port", 8080).apply();
         Toast.makeText(MainActivity.this,"紀錄檔設定完成",Toast.LENGTH_SHORT).show();
     }
     private int readReacord(){
@@ -116,8 +210,8 @@ public class MainActivity extends AppCompatActivity  {
         hintText = sharedPreferences.getString("hintText","訊息提示視窗");
         hintContentTitle = sharedPreferences.getString("hintContentTitle","Time is Life");
         hintContentText = sharedPreferences.getString("hintContentText","hintContentText");
-        IP = sharedPreferences.getString("IP","127.0.0.1");
-        port = sharedPreferences.getInt("port",2222);
+        IP = sharedPreferences.getString("IP","192.168.1.143");
+        port = sharedPreferences.getInt("port",8080);
         return fir_write;
     }
     private Button.OnClickListener About = new Button.OnClickListener(){
@@ -138,9 +232,9 @@ public class MainActivity extends AppCompatActivity  {
     private Button.OnClickListener openSettingActivity = new Button.OnClickListener(){
         @Override
         public void onClick(View v) {
-            Intent Maps = new Intent();
-            Maps.setClass(MainActivity.this,SettingActivity.class);
-            startActivity(Maps);
+            Intent SettingActivity = new Intent();
+            SettingActivity.setClass(MainActivity.this,SettingActivity.class);
+            startActivity(SettingActivity);
         }
     };
     private Button.OnClickListener openMapActivity = new Button.OnClickListener(){
@@ -148,7 +242,7 @@ public class MainActivity extends AppCompatActivity  {
         public void onClick(View v) {
             Intent Maps = new Intent();
             Maps.setClass(MainActivity.this,MapsActivity.class);
-            Maps.putExtra("geoinfo",in);
+            Maps.putExtra("geoinfo",webSocket_input);
             startActivity(Maps);
         }
     };
@@ -159,18 +253,26 @@ public class MainActivity extends AppCompatActivity  {
                 //Toast.makeText(MainActivity.this,"YES",Toast.LENGTH_SHORT).show();
                 // int id = getResources().getIdentifier("@drawable/" + "smallgreenbutton.png", null, getPackageName());
                 //red_green_switch.setImageResource(id);
+                //websocket初始化
+                try {
+                    initSocketClient();
+                } catch (URISyntaxException e) {
+                    Toast.makeText(MainActivity.this,"[發生錯誤]websocket初始化失敗"+e,Toast.LENGTH_SHORT).show();
+                }
+                connect();//websocket連線
                 cur_stat = 1;
                 smallred.setVisibility(View.GONE);
                 smallgreen.setVisibility(View.VISIBLE);
                 switch1.setText("結束行駛");
                 greenbutton.setText("系統正常執行中");
-
-                animateButton_green();
+                animateButton_green();//開啟動畫
             }
             else {
                 //Toast.makeText(MainActivity.this,"NO",Toast.LENGTH_SHORT).show();
                 //int id = getResources().getIdentifier("@drawable/" + "smallredbutton.png", null, getPackageName());
                 //red_green_switch.setImageResource(id);
+
+                closeConnect();//關閉websocket連線
                 cur_stat = -1;
                 smallred.setVisibility(View.VISIBLE);
                 smallgreen.setVisibility(View.GONE);
@@ -185,6 +287,14 @@ public class MainActivity extends AppCompatActivity  {
     private Button.OnClickListener MsgNotice = new Button.OnClickListener(){
         @Override
         public void onClick(View v){
+            if(client.isOpen())
+            {
+                client.send("[client ID : ]request allpath");
+            }
+            else{
+                Toast.makeText(MainActivity.this,"連線錯誤!!",Toast.LENGTH_SHORT).show();
+            }
+
             //步驟1 : 初始化NotificationManager，取得Notification服務
             NotificationManager myNotificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
             //步驟2 : 按下通知之後要執行的activity
@@ -239,10 +349,10 @@ public class MainActivity extends AppCompatActivity  {
             myNotificationManager.notify(0, notification);
             // 取消以前顯示的一個指定ID的通知.假如是一個短暫的通知，
             // 試圖將之隱藏，假如是一個持久的通知，將之從狀態列中移走.
-//              mNotificationManager.cancel(0);
+            //              mNotificationManager.cancel(0);
 
-            //取消以前顯示的所有通知.
-//              mNotificationManager.cancelAll();
+                        //取消以前顯示的所有通知.
+            //              mNotificationManager.cancelAll();
         }
     };
 
@@ -312,8 +422,6 @@ public class MainActivity extends AppCompatActivity  {
         // Use custom animation interpolator to achieve the bounce effect
         MyBounceInterpolator interpolator = new MyBounceInterpolator(0.14, 30.0);//Amplitude,Frequency
         myAnim.setInterpolator(interpolator);
-
-
 
         // Animate the button
         //Button button = (Button)findViewById(R.id.button3);

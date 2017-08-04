@@ -39,8 +39,8 @@ public class SettingActivity extends AppCompatActivity {
         EditText01.setText(sharedPreferences.getString("hintContentTitle","Not Value"));
         EditText02.setText(sharedPreferences.getString("hintContentText","Not Value"));
         EditText03.setText(String.valueOf(sharedPreferences.getFloat("tolerance",10.0f)));
-        EditText04.setText(sharedPreferences.getString("IP","127.0.0.1"));
-        EditText05.setText(String.valueOf(sharedPreferences.getInt("port",2222)));
+        EditText04.setText(sharedPreferences.getString("IP","192.168.1.143"));
+        EditText05.setText(String.valueOf(sharedPreferences.getInt("port",8080)));
     }
     private Button.OnClickListener Setting = new Button.OnClickListener(){
         public void onClick(View v){
@@ -61,8 +61,8 @@ public class SettingActivity extends AppCompatActivity {
             sharedPreferences.edit().putString("hintContentTitle", "Time is Life").apply();
             sharedPreferences.edit().putString("hintContentText", "您有提示訊息請查看").apply();
             sharedPreferences.edit().putFloat("tolerance", 10.0f).apply();
-            sharedPreferences.edit().putString("IP", "127.0.0.1").apply();
-            sharedPreferences.edit().putInt("port", 2222).apply();
+            sharedPreferences.edit().putString("IP", "192.168.1.143").apply();
+            sharedPreferences.edit().putInt("port", 8080).apply();
             Intent Main = new Intent();
             Main.setClass(SettingActivity.this,MainActivity.class);
             SettingActivity.this.finish();
