@@ -46,10 +46,10 @@
       <option value="楠梓加工區">楠梓加工區</option>
       <option value="捷運油廠國小站">捷運油廠國小站</option>
       <option value="楠梓家樂福">楠梓家樂福</option>
-	  <option value="高雄醫學院">高雄醫學院</option>
-	  <option value="台南火車站">台南火車站</option>
-	  <option value="台中火車站">台中火車站</option>
 	  <option value="台北火車站">台北火車站</option>
+	  <option value="高雄火車站">高雄火車站</option>
+	  <option value="義守大學">義守大學</option>
+	  <option value="台中火車站">台中火車站</option>
 	  <option value="屏東火車站">屏東火車站</option>
     </select>
     </div>
@@ -186,14 +186,18 @@ function showSteps(directionResult, markerArray, stepDisplay, map) {
   //很多點
   //取得單一經緯度.lat() .lng()
 
-    for (i = 0; i < directionResult.routes[0].overview_path.length ; i++) {
+    for (i = 0; i < directionResult.routes[0].overview_path.length  ; i++) {
+    	if(i % 2 == 0)continue;
 		var marker = markerArray[i] = markerArray[i] || new google.maps.Marker;
 		marker.setMap(map);
 		marker.setPosition(directionResult.routes[0].overview_path[i]);
 		
 		//取得資訊
 		document.getElementById('warnings-panel').innerHTML +=directionResult.routes[0].overview_path[i] +"0."+i + " " +"1."+directionResult.routes[0].overview_path.length+"</br>";
-		tempPostString +=directionResult.routes[0].overview_path[i].lng()+','+directionResult.routes[0].overview_path[i].lat()+' ';
+		if(i != 0){
+			tempPostString += ' ';
+		}
+		tempPostString +=directionResult.routes[0].overview_path[i].lng()+','+directionResult.routes[0].overview_path[i].lat();
 	} 
     
 	//post_to_url('test.php', {"0":tempPostString});
