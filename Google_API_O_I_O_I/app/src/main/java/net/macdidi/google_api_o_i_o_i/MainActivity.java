@@ -53,11 +53,11 @@ public class MainActivity extends AppCompatActivity  {
     private ImageView smallred;
     private ImageView smallgreen;
 
-    private String hintText;
-    private String hintContentTitle;
-    private String hintContentText;
-    private String IP;
-    private int port;
+    public static String hintText;
+    public static String hintContentTitle;
+    public static String hintContentText;
+    public static String IP;
+    public static int port;
     private int cur_stat;//當前狀態對應的圓形按鈕顏色，-1代表未啟動，0代表正常(GREEN)，1代表有救護車經過(RED)
 
     private Socket m_socket = null;

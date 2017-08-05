@@ -1,6 +1,5 @@
 package net.macdidi.google_api_o_i_o_i;
 
-import android.*;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,12 +7,15 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -35,15 +37,9 @@ import com.google.maps.android.PolyUtil;
 
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Random;
 
-import static android.view.View.X;
-import static android.view.View.Y;
 import static net.macdidi.google_api_o_i_o_i.R.id.map;
-
-import android.location.LocationListener;
-import android.location.LocationManager;
 
 public class MapsActivity extends AppCompatActivity implements LocationListener, OnMapReadyCallback {
     //中途點的經緯度資訊
@@ -53,27 +49,25 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
     //單一個點的資料結構:ID、經度、緯度
     class GeoInfo {
-        int id;//路徑編號
-        double Lat;
-        double Lng;
-
         //constructor
         GeoInfo() {
             id = 0;
             Lat = 0;
             Lng = 0;
         }
-    }
-
-    ;
+        int id;//路徑編號
+        double Lat;
+        double Lng;
+    };
     private ArrayList<GeoInfo> GeoPoint = new ArrayList<GeoInfo>();//所有點(包含不同路徑)的LIST
     private GoogleMap mMap;
     private Button btn;
     private LatLng StartPoint, EndPoint;//路線起點、終點marker
 
     //test
+    private LatLng test_loaction;
     private EditText testLatInput, testLngInput;
-    private double tolerance;
+    public static double tolerance;
     private ArrayList<LatLng> Single_Path_Point_Info = new ArrayList<LatLng>();//isOnPathLocation Function的參數(一條路徑)
     //定位
     private Marker nowLocation_marker;
@@ -147,12 +141,36 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        //定位
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-        } else {
-            ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-        }
+        mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(Marker marker) {
+                // TODO Auto-generated method stub
+            }
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+                // TODO Auto-generated method stub
+                testLatInput.setText(String.valueOf(test_loaction.latitude));
+                testLngInput.setText(String.valueOf(test_loaction.longitude));
+                test_loaction = new LatLng(marker.getPosition().latitude,marker.getPosition().longitude);
+                //判斷誤差，在__公尺內提示
+                if(PolyUtil.isLocationOnPath(test_loaction,Single_Path_Point_Info,false,tolerance)){
+                    Toast.makeText(MapsActivity.this, "[測試模式]\n將當前位置移動到\nlat:"
+                            +test_loaction.latitude+"\nlng:"+test_loaction.longitude
+                            +"\n在範圍內", Toast.LENGTH_LONG).show();
+                }
+                else{
+                    Toast.makeText(MapsActivity.this, "[測試模式]\n將當前位置移動到\nlat:"
+                            +test_loaction.latitude+"\nlng:"+test_loaction.longitude
+                            +"\n不再在範圍內", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onMarkerDrag(Marker marker) {
+                // TODO Auto-generated method stub
+
+            }
+        });
 
         String[] temp = GeoStr.split("\\$");//將字串切割成一條條路徑
         ArrayList<Integer> receiveID = new ArrayList<Integer>(); //儲存所有路徑的id編號 每一個元素都是一條的ID
@@ -186,6 +204,12 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                 //Log.d("myTag",GeoPoint.get(j).id+" " + GeoPoint.get(j).Lng+ " " + GeoPoint.get(j).Lat +"\n");
             }
         }
+        //定位
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+        } else {
+            ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        }
         //地圖中心移到目前位置
         Location location = locMgr.getLastKnownLocation(bestProv);
         LatLng cur_location = new LatLng(location.getLatitude(),location.getLongitude());
@@ -197,6 +221,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         first_flag = false;
         nowLocation_marker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).position(cur_location).title("目前位置"));
         nowLocation_marker.setDraggable(true);
+        test_loaction =  cur_location;
     }
     //actionbar menu
     @Override
@@ -218,30 +243,33 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         }
         return true;
     }
+
     private Button.OnClickListener myListner = new Button.OnClickListener(){
         @Override
         public void onClick(View v){
-            //印出提示訊息
-            //Toast t = Toast.makeText(MapsActivity.this,"receiveID:"+receiveID+"\n",Toast.LENGTH_LONG);
-            //Toast t = Toast.makeText(MapsActivity.this,temp.length,Toast.LENGTH_LONG);
-            //t.show();
-            //按下按鈕後會畫出路線
+            testIsOnPath();
             DrawLine();
-
-            //判斷誤差
-            LatLng testPoint = new LatLng(Double.parseDouble(testLatInput.getText().toString()),
-                                            Double.parseDouble(testLngInput.getText().toString()));
-            //在__公尺內提示
-            if(PolyUtil.isLocationOnPath(testPoint,Single_Path_Point_Info,false,tolerance)){
-                Toast t = Toast.makeText(MapsActivity.this,"在範圍內",Toast.LENGTH_LONG);
-                t.show();
-            }
-            else{
-                Toast t = Toast.makeText(MapsActivity.this,"不在範圍內",Toast.LENGTH_LONG);
-                t.show();
-            }
         }
     };
+    private void testIsOnPath(){
+        //印出提示訊息
+        //Toast t = Toast.makeText(MapsActivity.this,"receiveID:"+receiveID+"\n",Toast.LENGTH_LONG);
+        //Toast t = Toast.makeText(MapsActivity.this,temp.length,Toast.LENGTH_LONG);
+        //t.show();
+        //按下按鈕後會畫出路線
+
+        testLatInput.setText(String.valueOf(test_loaction.latitude));
+        testLngInput.setText(String.valueOf(test_loaction.longitude));
+        //判斷誤差，在__公尺內提示
+        if(PolyUtil.isLocationOnPath(test_loaction,Single_Path_Point_Info,false,tolerance)){
+            Toast t = Toast.makeText(MapsActivity.this,"在範圍內",Toast.LENGTH_LONG);
+            t.show();
+        }
+        else{
+            Toast t = Toast.makeText(MapsActivity.this,"不在範圍內",Toast.LENGTH_LONG);
+            t.show();
+        }
+    }
     public void DrawLine() {
         //畫出路徑
         int current_ID = 1;
