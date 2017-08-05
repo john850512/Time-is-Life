@@ -8,14 +8,19 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.speech.tts.TextToSpeech;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -26,8 +31,6 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.drafts.Draft;
-import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.io.DataInputStream;
@@ -36,22 +39,20 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Locale;
 
-import static android.R.attr.tag;
-import static com.google.android.gms.analytics.internal.zzy.cl;
-import static net.macdidi.google_api_o_i_o_i.R.id.button;
 import static net.macdidi.google_api_o_i_o_i.R.id.imageView;
 
 public class MainActivity extends AppCompatActivity  {
     private int socketerr = 0;
     private Button Notify_Button;
-    private Button settingBtn;
     private Button redbutton,greenbutton;
     private Button aboutBtn;
     private ToggleButton toggleButton;
     private Switch switch1;
+    private ImageView smallred;
+    private ImageView smallgreen;
 
-    //golbal variable(saved in xml)
     private String hintText;
     private String hintContentTitle;
     private String hintContentText;
@@ -59,8 +60,6 @@ public class MainActivity extends AppCompatActivity  {
     private int port;
     private int cur_stat;//當前狀態對應的圓形按鈕顏色，-1代表未啟動，0代表正常(GREEN)，1代表有救護車經過(RED)
 
-    private ImageView smallred;
-    private ImageView smallgreen;
     private Socket m_socket = null;
     private String webSocket_input = "";//websocket連線方式接收到的資料
     private String in = "";//ㄧ般socket的連線方式收到的資料
@@ -71,7 +70,9 @@ public class MainActivity extends AppCompatActivity  {
     // uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.ring);
 
     private WebSocketClient client;
-    private Draft selectDraft;
+    //tts
+    private TextToSpeech mTts;
+    private static final int REQ_TTS_STATUS_CHECK = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +81,7 @@ public class MainActivity extends AppCompatActivity  {
         checkNetStat();
         //設定ICON
         ActionBar menu = getSupportActionBar();
+        menu.setSubtitle("道路避讓即時警示系統");
         menu.setDisplayShowHomeEnabled(true);
         menu.setIcon(R.mipmap.ic_launcher);
         //連線
@@ -90,8 +92,6 @@ public class MainActivity extends AppCompatActivity  {
 
         Notify_Button = (Button)findViewById(R.id.Notify_Button);//開啟上方訊息通知的按鈕
         Notify_Button.setOnClickListener(MsgNotice);
-        settingBtn = (Button)findViewById(button);//Setting Button
-        settingBtn.setOnClickListener(openSettingActivity);
         redbutton = (Button)findViewById(R.id.button3);//Center Circle Button
         redbutton.setOnClickListener(openMapActivity);
         greenbutton= (Button)findViewById(R.id.button2);//Center Circle Button
@@ -105,7 +105,25 @@ public class MainActivity extends AppCompatActivity  {
         aboutBtn = (Button)findViewById(R.id.About_us);
         aboutBtn.setOnClickListener(About);
         cur_stat = -1;
+
+        //tts
+        Intent checkIntent = new Intent();
+        checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+        startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
+        mTts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    int result = mTts.setLanguage(Locale.CHINA);
+                    mTts.speak("歡迎使用道路避讓即時偵測系統，請點擊開始行駛按鈕開啟功能", TextToSpeech.QUEUE_FLUSH, null,null);
+                    if (result == TextToSpeech.LANG_MISSING_DATA
+                            || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Toast.makeText(MainActivity.this, "語音系統發生錯誤", Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+        });
     }
+
     //连接
     private void connect() {
         new Thread(){
@@ -135,6 +153,7 @@ public class MainActivity extends AppCompatActivity  {
                 //UI更新必須使用mainthread或UI thread
                 @Override
                 public void onOpen(ServerHandshake serverHandshake) {
+                    mTts.speak("與伺服器連線成功，功能已開啟", TextToSpeech.QUEUE_FLUSH, null,null);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -182,14 +201,61 @@ public class MainActivity extends AppCompatActivity  {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(MainActivity.this,"[WebSocket]"+e,Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this,"[WebSocket]連線失敗，請檢察連線設定",Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
             };
         }
     }
+    //actionbar menu
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_setting:
+                Intent SettingActivity = new Intent();
+                SettingActivity.setClass(MainActivity.this,SettingActivity.class);
+                startActivity(SettingActivity);
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+    //tts
+    private final TextToSpeech.OnInitListener mInitListener = new TextToSpeech.OnInitListener() {
+        @Override
+        public void onInit(int status) {
+            // status can be either TextToSpeech.SUCCESS or TextToSpeech.ERROR.
+            if (status == TextToSpeech.SUCCESS) {
+                // Set preferred language to US english.
+                // Note that a language may not be available, and the result will indicate this.
+                int result = mTts.setLanguage(Locale.CHINESE);
+                // Try this someday for some interesting results.
+                // int result mTts.setLanguage(Locale.FRANCE);
+                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    // Lanuage data is missing or the language is not supported.
+                    Log.e("TAG", "Language is not available.");
+                } else {
+                    // Check the documentation for other possible result codes.
+                    // For example, the language may be available for the locale,
+                    // but not for the specified country and variant.
 
+                    // The TTS engine has been successfully initialized.
+                    // Allow the user to press the button for the app to speak again.
+                }
+            } else {
+                // Initialization failed.
+                Log.e("TAG", "Could not initialize TextToSpeech.");
+            }
+        }
+    };
     private void firRecord(){
         SharedPreferences sharedPreferences = getSharedPreferences("Data" , MODE_PRIVATE);
         sharedPreferences.edit().putInt("fir_write", 1).apply();
@@ -218,25 +284,21 @@ public class MainActivity extends AppCompatActivity  {
         @Override
         public void onClick(View v) {
             if(cur_stat == 0) {
+                //正常狀態
                 cur_stat = 1;
                 greenbutton.setVisibility(View.VISIBLE);
                 redbutton.setVisibility(View.GONE);
             }
             else if(cur_stat == 1){
+                //警示狀態
                 cur_stat = 0;
                 greenbutton.setVisibility(View.GONE);
                 redbutton.setVisibility(View.VISIBLE);
+                mTts.speak("即將有救護車經過，請點擊紅色按鈕查看，並盡速進行避讓", TextToSpeech.QUEUE_FLUSH, null,null);
             }
         }
     };
-    private Button.OnClickListener openSettingActivity = new Button.OnClickListener(){
-        @Override
-        public void onClick(View v) {
-            Intent SettingActivity = new Intent();
-            SettingActivity.setClass(MainActivity.this,SettingActivity.class);
-            startActivity(SettingActivity);
-        }
-    };
+
     private Button.OnClickListener openMapActivity = new Button.OnClickListener(){
         @Override
         public void onClick(View v) {

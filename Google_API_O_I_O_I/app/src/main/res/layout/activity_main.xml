@@ -20,17 +20,7 @@
         android:textSize="40sp"
         android:textColor="@android:color/holo_green_light" />
 
-    <!---setting button-->
-    <Button
-        android:background="@drawable/settingbtn_selector"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="18dp"
-        android:layout_marginRight="5dp"
-        android:id="@+id/button"
-        android:layout_width="70dp"
-        android:layout_height="70dp" />
+
 
     <Button
         android:text="按我"
@@ -86,21 +76,13 @@
         android:id="@+id/imageView" />
 
     <TextView
-        android:text="道路避讓及時警示系統"
+        android:text="道路避讓即時警示系統"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/textView"
         android:layout_below="@+id/app_name"
         android:layout_centerHorizontal="true"
         android:textSize="20sp" />
-
-    <TextView
-        android:text="目前狀態："
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textView2"
-        android:layout_alignBottom="@+id/hidden"
-        android:layout_toEndOf="@+id/About_us" />
 
     <Button
         android:text="救護車即將經過！！"
@@ -124,18 +106,33 @@
         android:textColor="@android:color/background_light"
         android:layout_marginTop="20dp"
         android:textSize="20sp" />
+
+    <TextView
+        android:text="目前狀態："
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView2"
+
+        android:layout_toEndOf="@+id/About_us"
+        android:layout_marginBottom="90dp"
+        android:layout_above="@+id/textView"
+        android:textColor="@android:color/black" />
+
     <Switch
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/switch1"
         android:splitTrack="false"
+        android:switchMinWidth="50dp"
         android:text="開始行駛"
         android:checked="false"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="70dp"
-        android:layout_marginRight="80dp" />
-
+        android:layout_marginRight="80dp"
+        android:switchPadding="20dp"
+        android:layout_alignStart="@+id/textView2"
+        android:layout_marginBottom="50dp"
+        android:layout_above="@+id/textView"
+        android:textSize="14sp"
+        android:textColor="@android:color/black" />
 
 
 </RelativeLayout>

@@ -5,6 +5,9 @@ import android.content.SharedPreferences;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -42,6 +45,7 @@ public class SettingActivity extends AppCompatActivity {
         EditText04.setText(sharedPreferences.getString("IP","192.168.1.143"));
         EditText05.setText(String.valueOf(sharedPreferences.getInt("port",8080)));
     }
+
     private Button.OnClickListener Setting = new Button.OnClickListener(){
         public void onClick(View v){
             sharedPreferences.edit().putString("hintText", EditText00.getText().toString()).apply();
