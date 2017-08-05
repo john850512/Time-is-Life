@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity  {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(MainActivity.this,"[websocket]連線成功",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this,"[WebSocket]連線成功",Toast.LENGTH_SHORT).show();
                             //连接成功
                             Log.d("tag","opened connection");
                         }
@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity  {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(MainActivity.this,"[websocket]結束連線",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this,"[WebSocket]關閉連線",Toast.LENGTH_SHORT).show();
 
                             //连接断开，remote判定是客户端断开还是服务端断开
                             //Log.d(tag,"Connection closed by " + ( remote ? "remote peer" : "us" ) + ", info=" + s);
@@ -182,7 +182,7 @@ public class MainActivity extends AppCompatActivity  {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(MainActivity.this,"[錯誤訊息]"+e,Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this,"[WebSocket]"+e,Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -257,7 +257,7 @@ public class MainActivity extends AppCompatActivity  {
                 try {
                     initSocketClient();
                 } catch (URISyntaxException e) {
-                    Toast.makeText(MainActivity.this,"[發生錯誤]websocket初始化失敗"+e,Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this,"[WebSocket]初始化失敗"+e,Toast.LENGTH_SHORT).show();
                 }
                 connect();//websocket連線
                 cur_stat = 1;
@@ -287,12 +287,15 @@ public class MainActivity extends AppCompatActivity  {
     private Button.OnClickListener MsgNotice = new Button.OnClickListener(){
         @Override
         public void onClick(View v){
-            if(client.isOpen())
-            {
-                client.send("[client ID : ]request allpath");
+            if(client != null) {//先確定websocket是否初始化
+                if (client.isOpen()) {
+                    client.send("[client ID:]request allpath");
+                } else {
+                    Toast.makeText(MainActivity.this, "[WebSocket]尚未連線", Toast.LENGTH_SHORT).show();
+                }
             }
             else{
-                Toast.makeText(MainActivity.this,"連線錯誤!!",Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "[WebSocket]尚未連線", Toast.LENGTH_SHORT).show();
             }
 
             //步驟1 : 初始化NotificationManager，取得Notification服務

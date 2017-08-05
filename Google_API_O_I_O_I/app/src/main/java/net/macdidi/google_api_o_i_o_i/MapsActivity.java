@@ -4,14 +4,12 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.android.gms.contextmanager.internal.InterestUpdateBatchImpl;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -23,6 +21,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.PolyUtil;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import static net.macdidi.google_api_o_i_o_i.R.id.map;
 
@@ -148,35 +147,48 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     };
     public void DrawLine() {
-        PolylineOptions polylineOpt = new PolylineOptions();//要畫出的線段
         //畫出路徑
-        int firstID = 0;
-        for(int i = 0 ; i < GeoPoint.size() ; ++i){
+        int current_ID = 1;
+        for(int i = 0 ; i < GeoPoint.size() ; ){
+            PolylineOptions polylineOpt = new PolylineOptions();//要畫出的線段
             /*如何判斷不同條的路徑資訊?
                             GeoPoint是一個資料結構，包含"所有路徑"(並非單一路徑)的經度Lng、緯度Lat還有路徑ID
                             每一條完整的路徑都應該具有一個路徑編號
                        */
+            boolean first_Point_flag = true;
+            while(GeoPoint.get(i).id == current_ID){
+                //第一個點的mark
+                if(first_Point_flag == true){
+                    StartPoint = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
+                    mMap.addMarker(new MarkerOptions().position(StartPoint).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)).title("起點"));
+                    first_Point_flag = false;
+                }
+                //最後一個點的mark
+                if(i+1 == GeoPoint.size()){
+                    EndPoint = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
+                    mMap.addMarker(new MarkerOptions().position(EndPoint).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)).title("終點"));
+                }
+                else if(GeoPoint.get(i+1).id != current_ID){
+                    EndPoint = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
+                    mMap.addMarker(new MarkerOptions().position(EndPoint).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)).title("終點"));
+                }
 
-            //第一個點的mark
-            if(i == 0){
-                StartPoint = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
-                mMap.addMarker(new MarkerOptions().position(StartPoint).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)).title("起點"));
+                LatLng point = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
+                //Log.d("myTag",GeoPoint.get(i).Lng+ " " + GeoPoint.get(i).Lat+"\n");
+                polylineOpt.add(point);
+                i++;//下一個點
+                if(i == GeoPoint.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
+                    break;
+                }
             }
-            //最後一個點的mark
-            if(i ==GeoPoint.size() -1 ){
-                EndPoint = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
-                mMap.addMarker(new MarkerOptions().position(EndPoint).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)).title("終點"));
-            }
-            LatLng point = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
-            //Log.d("myTag",GeoPoint.get(i).Lng+ " " + GeoPoint.get(i).Lat+"\n");
-            polylineOpt.add(point);
+            current_ID++;//下一條路徑
+            //線條顏色
+            Random rnd = new Random();
+            polylineOpt.color(Color.rgb(rnd.nextInt(256),rnd.nextInt(256),rnd.nextInt(256)));
+            //線條寬度
+            polylineOpt.width(13);
 
+            mMap.addPolyline(polylineOpt);
         }
-        //線條顏色
-        polylineOpt.color(Color.GREEN);
-        //線條寬度
-        polylineOpt.width(13);
-
-        mMap.addPolyline(polylineOpt);
     }
 }
