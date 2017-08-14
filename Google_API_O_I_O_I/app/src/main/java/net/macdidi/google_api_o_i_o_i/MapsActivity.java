@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
 
+import static android.location.LocationManager.NETWORK_PROVIDER;
 import static net.macdidi.google_api_o_i_o_i.R.id.map;
 
 public class MapsActivity extends AppCompatActivity implements LocationListener, OnMapReadyCallback {
@@ -94,6 +95,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         testLngInput = (EditText) findViewById(R.id.testLngInput);
         //set icon with actionbar
         ActionBar menu = getSupportActionBar();
+        menu.setSubtitle("道路避讓即時警示系統");
         menu.setDisplayShowHomeEnabled(true);
         menu.setIcon(R.mipmap.ic_launcher);
         //set data
@@ -182,6 +184,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             receiveID.add( Integer.valueOf(temp[i]) );//第1  3 5 7 9...都是ID
             SingleGeoStr.add(temp[i+1]);//2 4 6 8 10...都是路徑資訊
         }
+
         //分割一條完整的路徑，得到各中途點的經緯度
         for(int i = 0 ; i < SingleGeoStr.size() ; ++i) {
             //分割成許多中途點 中途點間彼此用" "作為分割
@@ -211,7 +214,9 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
         //地圖中心移到目前位置
-        Location location = locMgr.getLastKnownLocation(bestProv);
+        //Location location = locMgr.getLastKnownLocation(bestProv);
+        //第一次用網路訂位而不是用gps，不然會return null
+        Location location = locMgr.getLastKnownLocation(NETWORK_PROVIDER);
         LatLng cur_location = new LatLng(location.getLatitude(),location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(cur_location,13));//中心是起點
         //移掉前一個mark，重新定位
@@ -272,7 +277,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     }
     public void DrawLine() {
         //畫出路徑
-        int current_ID = 1;
+        int current_ID = MainActivity.machineID;
         for(int i = 0 ; i < GeoPoint.size() ; ){
             PolylineOptions polylineOpt = new PolylineOptions();//要畫出的線段
             /*如何判斷不同條的路徑資訊?
@@ -331,7 +336,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     protected void onResume() {
         super.onResume();
         // 如果GPS或網路定位開啟，更新位置
-        if (locMgr.isProviderEnabled(LocationManager.GPS_PROVIDER) || locMgr.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+        if (locMgr.isProviderEnabled(LocationManager.GPS_PROVIDER) || locMgr.isProviderEnabled(NETWORK_PROVIDER)) {
             //  確認 ACCESS_FINE_LOCATION 權限是否授權
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);

@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity  {
     private ImageView smallred;
     private ImageView smallgreen;
 
+    public static int machineID = 1;
     public static String hintText;
     public static String hintContentTitle;
     public static String hintContentText;
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity  {
         setContentView(R.layout.activity_main);
         //檢查網路狀態
         checkNetStat();
-        //設定ICON
+        //set icon with actionbar
         ActionBar menu = getSupportActionBar();
         menu.setSubtitle("道路避讓即時警示系統");
         menu.setDisplayShowHomeEnabled(true);
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity  {
             public void onInit(int status) {
                 if (status == TextToSpeech.SUCCESS) {
                     int result = mTts.setLanguage(Locale.CHINA);
-                    mTts.speak("歡迎使用道路避讓即時偵測系統，請點擊開始行駛按鈕開啟功能", TextToSpeech.QUEUE_FLUSH, null,null);
+                    mTts.speak("歡迎使用道路避讓即時警示系統，請點擊開始行駛按鈕開啟功能", TextToSpeech.QUEUE_FLUSH, null,null);
                     if (result == TextToSpeech.LANG_MISSING_DATA
                             || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                         Toast.makeText(MainActivity.this, "語音系統發生錯誤", Toast.LENGTH_LONG).show();
@@ -265,6 +266,7 @@ public class MainActivity extends AppCompatActivity  {
         sharedPreferences.edit().putFloat("tolerance", 10.0f).apply();
         sharedPreferences.edit().putString("IP", "192.168.1.143").apply();
         sharedPreferences.edit().putInt("port", 8080).apply();
+        sharedPreferences.edit().putInt("machineID", 1).apply();
         Toast.makeText(MainActivity.this,"紀錄檔設定完成",Toast.LENGTH_SHORT).show();
     }
     private int readReacord(){
@@ -278,6 +280,7 @@ public class MainActivity extends AppCompatActivity  {
         hintContentText = sharedPreferences.getString("hintContentText","hintContentText");
         IP = sharedPreferences.getString("IP","192.168.1.143");
         port = sharedPreferences.getInt("port",8080);
+        sharedPreferences.edit().putInt("machineID", 1).apply();
         return fir_write;
     }
     private Button.OnClickListener About = new Button.OnClickListener(){
@@ -351,7 +354,7 @@ public class MainActivity extends AppCompatActivity  {
         public void onClick(View v){
             if(client != null) {//先確定websocket是否初始化
                 if (client.isOpen()) {
-                    client.send("[client ID:]request allpath");
+                    client.send("[client ID:"+machineID+"]request allpath");
                 } else {
                     Toast.makeText(MainActivity.this, "[WebSocket]尚未連線", Toast.LENGTH_SHORT).show();
                 }

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="net.macdidi.google_api_o_i_o_i.MainActivity"
+    android:background="@drawable/bg">
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:text="Time is Life"
+        android:id="@+id/app_name"
+        android:gravity="center"
+        android:layout_marginTop="100dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:textSize="40sp"
+        android:textColor="@android:color/holo_green_light" />
+    <TextView
+        android:text="道路避讓即時警示系統"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView"
+        android:layout_below="@+id/app_name"
+        android:layout_centerHorizontal="true"
+        android:textSize="20sp" />
+    <TextView
+        android:text="請選擇您的身份:"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView1"
+        android:layout_below="@+id/textView"
+        android:layout_marginTop="18dp"
+        android:layout_centerHorizontal="true"
+        android:textSize="20sp"
+        android:textStyle="normal|bold" />
+    <Button
+        android:text=""
+        android:id="@+id/button6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent = "true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="80dp"
+        android:background="@drawable/choose_ambulance_client"
+        />
+
+    <Button
+        android:text=""
+        android:id="@+id/button7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent = "true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="80dp"
+        android:background="@drawable/choose_car_client"/>
+
+    <TextView
+        android:text="救護車"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button7"
+        android:layout_centerInParent = "true"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="93dp"
+        android:textSize="20sp"
+        android:id="@+id/textView6" />
+
+    <TextView
+        android:text="一般駕駛"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button6"
+        android:layout_centerInParent = "true"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="85dp"
+        android:textSize="20sp"
+        android:id="@+id/textView5"
+         />
+</RelativeLayout>

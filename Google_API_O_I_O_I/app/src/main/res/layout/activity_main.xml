@@ -8,20 +8,6 @@
     tools:context="net.macdidi.google_api_o_i_o_i.MainActivity"
     android:background="@drawable/bg">
 
-    <TextView
-        android:layout_width="300dp"
-        android:layout_height="50dp"
-        android:text="Time is Life"
-        android:id="@+id/app_name"
-        android:gravity="center"
-        android:layout_marginTop="100dp"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentTop="true"
-        android:textSize="40sp"
-        android:textColor="@android:color/holo_green_light" />
-
-
-
     <Button
         android:text="按我"
         android:id="@+id/Notify_Button"
@@ -75,6 +61,17 @@
         android:layout_marginLeft="170dp"
         android:id="@+id/imageView" />
 
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:text="Time is Life"
+        android:id="@+id/app_name"
+        android:gravity="center"
+        android:layout_marginTop="100dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:textSize="40sp"
+        android:textColor="@android:color/holo_green_light" />
     <TextView
         android:text="道路避讓即時警示系統"
         android:layout_width="wrap_content"
