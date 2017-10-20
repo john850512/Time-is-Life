@@ -8,12 +8,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.media.AudioManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -28,27 +23,14 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.handshake.ServerHandshake;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Locale;
 
 import static net.macdidi.google_api_o_i_o_i.R.id.imageView;
 
 public class MainActivity extends AppCompatActivity  {
-    private int socketerr = 0;
-    private Button Notify_Button;
     private Button redbutton,greenbutton;
     private Button aboutBtn;
-    private ToggleButton toggleButton;
     private Switch switch1;
     private ImageView smallred;
     private ImageView smallgreen;
@@ -60,17 +42,12 @@ public class MainActivity extends AppCompatActivity  {
     public static String IP;
     public static int port;
     private int cur_stat;//當前狀態對應的圓形按鈕顏色，-1代表未啟動，0代表正常(GREEN)，1代表有救護車經過(RED)
-
-    private Socket m_socket = null;
-    private String webSocket_input = "";//websocket連線方式接收到的資料
-    private String in = "";//ㄧ般socket的連線方式收到的資料
     long[] vibrate = {0,100,200,300};   //震動時間長度參數
 
     //Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION); //音樂Uri參數
     // uri = Uri.parse("file:///sdcard/Notifications/hangout_ringtone.m4a");
     // uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.ring);
 
-    private WebSocketClient client;
     //tts
     private TextToSpeech mTts;
     private static final int REQ_TTS_STATUS_CHECK = 0;
@@ -78,21 +55,15 @@ public class MainActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //檢查網路狀態
-        checkNetStat();
+
         //set icon with actionbar
         ActionBar menu = getSupportActionBar();
         menu.setSubtitle("道路避讓即時警示系統");
         menu.setDisplayShowHomeEnabled(true);
         menu.setIcon(R.mipmap.ic_launcher);
-        //連線
-        Thread connection = new Thread(clientSocket);
-        connection.start();
 
         if(readReacord() == 0)firRecord();//第一次開啟APP(之前沒寫過檔案)
 
-        Notify_Button = (Button)findViewById(R.id.Notify_Button);//開啟上方訊息通知的按鈕
-        Notify_Button.setOnClickListener(MsgNotice);
         redbutton = (Button)findViewById(R.id.button3);//Center Circle Button
         redbutton.setOnClickListener(openMapActivity);
         greenbutton= (Button)findViewById(R.id.button2);//Center Circle Button
@@ -105,7 +76,7 @@ public class MainActivity extends AppCompatActivity  {
         switch1.setOnClickListener(switch_colorChange);
         aboutBtn = (Button)findViewById(R.id.About_us);
         aboutBtn.setOnClickListener(About);
-        cur_stat = -1;
+        cur_stat = -1;//當前狀態
 
         //tts
         Intent checkIntent = new Intent();
@@ -125,90 +96,6 @@ public class MainActivity extends AppCompatActivity  {
         });
     }
 
-    //连接
-    private void connect() {
-        new Thread(){
-            @Override
-            public void run() {
-                client.connect();
-            }
-        }.start();
-    }
-    //断开连接
-    private void closeConnect() {
-        try {
-            client.close();
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
-        finally{
-            //websocket server 和 client 都不可reuse
-            client = null;
-        }
-    }
-    //websocket 初始化
-    private void initSocketClient() throws URISyntaxException {
-        if(client == null){
-            client = new WebSocketClient(URI.create("ws://"+IP+":"+port+"/WebSocket/websocket")) {
-                //UI更新必須使用mainthread或UI thread
-                @Override
-                public void onOpen(ServerHandshake serverHandshake) {
-                    mTts.speak("與伺服器連線成功，功能已開啟", TextToSpeech.QUEUE_FLUSH, null,null);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(MainActivity.this,"[WebSocket]連線成功",Toast.LENGTH_SHORT).show();
-                            //连接成功
-                            Log.d("tag","opened connection");
-                        }
-                    });
-                }
-                @Override
-                public void onMessage(final String s) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(MainActivity.this,s,Toast.LENGTH_SHORT).show();
-                            webSocket_input = s;
-                            Log.d("tag",s);
-                            //服务端消息
-                            /*
-                                                        initmsg += s + "\n";
-                                                        Message msg = new Message();
-                                                        msg.what = 1;
-                                                        myhandler.sendMessage(msg);
-                                                        Log.d(tag,"received:" + s);
-                                                        */
-                        }
-                    });
-                }
-                @Override
-                public void onClose(int i, String s, boolean remote) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(MainActivity.this,"[WebSocket]關閉連線",Toast.LENGTH_SHORT).show();
-
-                            //连接断开，remote判定是客户端断开还是服务端断开
-                            //Log.d(tag,"Connection closed by " + ( remote ? "remote peer" : "us" ) + ", info=" + s);
-                            //
-                            //closeConnect();
-                        }
-                    });
-                }
-                @Override
-                public void onError(final Exception e) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(MainActivity.this,"[WebSocket]連線失敗，請檢察連線設定",Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-            };
-        }
-    }
     //actionbar menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -305,9 +192,9 @@ public class MainActivity extends AppCompatActivity  {
     private Button.OnClickListener openMapActivity = new Button.OnClickListener(){
         @Override
         public void onClick(View v) {
+            //開啟地圖
             Intent Maps = new Intent();
             Maps.setClass(MainActivity.this,MapsActivity.class);
-            Maps.putExtra("geoinfo",webSocket_input);
             startActivity(Maps);
         }
     };
@@ -318,26 +205,23 @@ public class MainActivity extends AppCompatActivity  {
                 //Toast.makeText(MainActivity.this,"YES",Toast.LENGTH_SHORT).show();
                 // int id = getResources().getIdentifier("@drawable/" + "smallgreenbutton.png", null, getPackageName());
                 //red_green_switch.setImageResource(id);
-                //websocket初始化
-                try {
-                    initSocketClient();
-                } catch (URISyntaxException e) {
-                    Toast.makeText(MainActivity.this,"[WebSocket]初始化失敗"+e,Toast.LENGTH_SHORT).show();
-                }
-                connect();//websocket連線
                 cur_stat = 1;
                 smallred.setVisibility(View.GONE);
                 smallgreen.setVisibility(View.VISIBLE);
                 switch1.setText("結束行駛");
                 greenbutton.setText("系統正常執行中");
                 animateButton_green();//開啟動畫
+
+                // 開啟service
+                startService(new Intent(MainActivity.this, Servicetest.class));
+                //開啟通知欄顯示
+                notifyMsg();
             }
             else {
                 //Toast.makeText(MainActivity.this,"NO",Toast.LENGTH_SHORT).show();
                 //int id = getResources().getIdentifier("@drawable/" + "smallredbutton.png", null, getPackageName());
                 //red_green_switch.setImageResource(id);
 
-                closeConnect();//關閉websocket連線
                 cur_stat = -1;
                 smallred.setVisibility(View.VISIBLE);
                 smallgreen.setVisibility(View.GONE);
@@ -345,141 +229,75 @@ public class MainActivity extends AppCompatActivity  {
                 redbutton.setVisibility(View.GONE);
                 switch1.setText("開始行駛");
                 greenbutton.setText("系統尚未執行");
+                //關閉service
+                stopService(new Intent(MainActivity.this, Servicetest.class));
             }
         }
     };
-    //通知偵聽
-    private Button.OnClickListener MsgNotice = new Button.OnClickListener(){
-        @Override
-        public void onClick(View v){
-            if(client != null) {//先確定websocket是否初始化
-                if (client.isOpen()) {
-                    client.send("[client ID:"+machineID+"]request allpath");
-                } else {
-                    Toast.makeText(MainActivity.this, "[WebSocket]尚未連線", Toast.LENGTH_SHORT).show();
-                }
-            }
-            else{
-                Toast.makeText(MainActivity.this, "[WebSocket]尚未連線", Toast.LENGTH_SHORT).show();
-            }
 
-            //步驟1 : 初始化NotificationManager，取得Notification服務
-            NotificationManager myNotificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-            //步驟2 : 按下通知之後要執行的activity
-            Intent notifyIntent = new Intent(MainActivity.this , MainActivity.class);
-            //notifyIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            notifyIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            PendingIntent appIntent = PendingIntent.getActivity(MainActivity.this,0,notifyIntent,0);
+    //通知欄顯示
+    private void notifyMsg(){
+        //步驟1 : 初始化NotificationManager，取得Notification服務
+        NotificationManager myNotificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        //步驟2 : 按下通知之後要執行的activity
+        Intent notifyIntent = new Intent(MainActivity.this , MainActivity.class);
+        //notifyIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        notifyIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent appIntent = PendingIntent.getActivity(MainActivity.this,0,notifyIntent,0);
 
-            //步驟3 : 建構notification
-            Notification notification = null;
+        //步驟3 : 建構notification
+        Notification notification = null;
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-                Notification.BigPictureStyle BigPicture = new Notification.BigPictureStyle();
-                BigPicture.setBigContentTitle(hintText);
-                //先來設定顯示的大圖片
-                Bitmap bitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.test)).getBitmap();
-                //丟進去
-                BigPicture.bigPicture(bitmap);
-                notification = new Notification.Builder(MainActivity.this)
-                        .setSmallIcon(R.mipmap.ic_launcher) //(小圖示)
-                        .setLargeIcon(BitmapFactory.decodeResource(MainActivity.this.getResources(), R.mipmap.ic_launcher)) // 下拉下拉清單裡面的圖示（大圖示）
-                        .setTicker("通知訊息顯示在這裡")
-                        .setWhen(System.currentTimeMillis()) //設置發生時間
-                        .setAutoCancel(true)   // 設置通知被使用者點擊後是否清除  //notification.flags = Notification.FLAG_AUTO_CANCEL;
-                        .setContentTitle(hintContentTitle)
-                        .setContentText(hintContentText)
-                        //.setOngoing(true)      //true使notification變為ongoing，用戶不能手動清除// notification.flags = Notification.FLAG_ONGOING_EVENT; notification.flags = Notification.FLAG_NO_CLEAR;
-                        .setDefaults(Notification.DEFAULT_ALL) //使用所有默認值，比如聲音，震動，閃屏等等
-                        //.setDefaults(Notification.DEFAULT_VIBRATE) //使用默認手機震動提示
-                        //.setDefaults(Notification.DEFAULT_SOUND) //使用默認聲音提示
-                        //.setDefaults(Notification.DEFAULT_LIGHTS) //使用默認閃光提示
-                        //.setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND) //使用默認閃光提示 與 默認聲音提示
-                        .setContentIntent(appIntent)
-                        .setVibrate(vibrate) //自訂震動長度
-                        //.setSound(uri) //自訂鈴聲
-                        //.setLights(0xff00ff00, 300, 1000) //自訂燈光閃爍 (ledARGB, ledOnMS, ledOffMS)
-                        .setStyle(BigPicture)
-                        .build();
-            }
-            // 將此通知放到通知欄的"Ongoing"即"正在運行"組中
-            //notification.flags = Notification.FLAG_ONGOING_EVENT;
-
-            // 表明在點擊了通知欄中的"清除通知"後，此通知不清除，
-            // 經常與FLAG_ONGOING_EVENT一起使用
-            //notification.flags = Notification.FLAG_NO_CLEAR;
-            //notification.flags= Notification.FLAG_AUTO_CANCEL;
-            //閃爍燈光
-            //notification.flags = Notification.FLAG_SHOW_LIGHTS;
-            // 重複的聲響,直到用戶響應。
-            //notification.flags = Notification.FLAG_INSISTENT;
-            // 把指定ID的通知持久的發送到狀態條上.
-            myNotificationManager.notify(0, notification);
-            // 取消以前顯示的一個指定ID的通知.假如是一個短暫的通知，
-            // 試圖將之隱藏，假如是一個持久的通知，將之從狀態列中移走.
-            //              mNotificationManager.cancel(0);
-
-                        //取消以前顯示的所有通知.
-            //              mNotificationManager.cancelAll();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+            Notification.BigPictureStyle BigPicture = new Notification.BigPictureStyle();
+            BigPicture.setBigContentTitle(hintText);
+            //先來設定顯示的大圖片
+            Bitmap bitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.test)).getBitmap();
+            //丟進去
+            BigPicture.bigPicture(bitmap);
+            notification = new Notification.Builder(MainActivity.this)
+                    .setSmallIcon(R.mipmap.ic_launcher) //(小圖示)
+                    .setLargeIcon(BitmapFactory.decodeResource(MainActivity.this.getResources(), R.mipmap.ic_launcher)) // 下拉下拉清單裡面的圖示（大圖示）
+                    .setTicker("通知訊息顯示在這裡")
+                    .setWhen(System.currentTimeMillis()) //設置發生時間
+                    .setAutoCancel(true)   // 設置通知被使用者點擊後是否清除  //notification.flags = Notification.FLAG_AUTO_CANCEL;
+                    .setContentTitle(hintContentTitle)
+                    .setContentText(hintContentText)
+                    //.setOngoing(true)      //true使notification變為ongoing，用戶不能手動清除// notification.flags = Notification.FLAG_ONGOING_EVENT; notification.flags = Notification.FLAG_NO_CLEAR;
+                    .setDefaults(Notification.DEFAULT_ALL) //使用所有默認值，比如聲音，震動，閃屏等等
+                    //.setDefaults(Notification.DEFAULT_VIBRATE) //使用默認手機震動提示
+                    //.setDefaults(Notification.DEFAULT_SOUND) //使用默認聲音提示
+                    //.setDefaults(Notification.DEFAULT_LIGHTS) //使用默認閃光提示
+                    //.setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND) //使用默認閃光提示 與 默認聲音提示
+                    .setContentIntent(appIntent)
+                    .setVibrate(vibrate) //自訂震動長度
+                    //.setSound(uri) //自訂鈴聲
+                    //.setLights(0xff00ff00, 300, 1000) //自訂燈光閃爍 (ledARGB, ledOnMS, ledOffMS)
+                    .setStyle(BigPicture)
+                    .build();
         }
-    };
+        // 將此通知放到通知欄的"Ongoing"即"正在運行"組中
+        //notification.flags = Notification.FLAG_ONGOING_EVENT;
 
+        // 表明在點擊了通知欄中的"清除通知"後，此通知不清除，
+        // 經常與FLAG_ONGOING_EVENT一起使用
+        //notification.flags = Notification.FLAG_NO_CLEAR;
+        //notification.flags= Notification.FLAG_AUTO_CANCEL;
+        //閃爍燈光
+        //notification.flags = Notification.FLAG_SHOW_LIGHTS;
+        // 重複的聲響,直到用戶響應。
+        //notification.flags = Notification.FLAG_INSISTENT;
+        // 把指定ID的通知持久的發送到狀態條上.
+        myNotificationManager.notify(0, notification);
+        // 取消以前顯示的一個指定ID的通知.假如是一個短暫的通知，
+        // 試圖將之隱藏，假如是一個持久的通知，將之從狀態列中移走.
+        //              mNotificationManager.cancel(0);
 
-    Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            if(socketerr == 0)
-            Toast.makeText(getApplicationContext(),in, Toast.LENGTH_LONG).show();
-            else Toast.makeText(getApplicationContext(),"Cannot connect to server~" + in, Toast.LENGTH_LONG).show();
-        }
-    };
-
-    Runnable clientSocket = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                InetAddress serverAddr = InetAddress.getByName(IP);
-                Log.e("Socket", "Client: Connecting...");
-                try {
-                    m_socket= new Socket(serverAddr, port);
-                    DataOutputStream output = new DataOutputStream( m_socket.getOutputStream() );
-                    DataInputStream input = new DataInputStream( m_socket.getInputStream() );
-                        //模式 0
-                        output.writeUTF("0");//輸出模式 0 = 導航    1=車輛請求所有救護車路徑    2=教護車抵達刪除路徑
-                        output.writeUTF("$1$22.734056,120.2836698  22.718653,120.307041");  // $救護車代號$  起點坐標終點坐標
-                        in = input.readUTF(); //這裡是模式0  會獲得該救護車的導航路徑
-                    //模式 1
-                    //output.writeUTF("1");     //輸出模式
-                    //in = input.readUTF();      //這裡是模式1  會獲得所有救護車路徑  格式 =>  #$救護車代號$路徑#$救護車代號$路徑
-                                            //模式 2
-                                            //output.writeUTF("2");    //輸出模式
-                                           // output.writeUTF("1");    //救護車代號 => 之後server會刪掉該救護車的路徑
-                    socketerr = 0;
-                } catch (Exception e) {
-                    Log.e("Socket", "Client: Error", e);
-                    socketerr = 1;
-                } finally {
-                    m_socket.close();
-                }
-            } catch (Exception e) {
-            }
-            handler.sendEmptyMessage(0);
-        }
-    };
-    //check Internet
-    public void checkNetStat(){
-        //先取得此CONNECTIVITY_SERVICE
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        //取得網路相關資訊
-        NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
-
-        //判斷是否有網路
-        if (networkInfo == null || !networkInfo.isConnected()){
-            Toast.makeText(MainActivity.this,"請確認可連上網路在執行本程式",Toast.LENGTH_SHORT).show();
-            MainActivity.this.finish();
-        }
+        //取消以前顯示的所有通知.
+        //              mNotificationManager.cancelAll();
     }
+
+
     //anim
     public void animateButton_red() {
         // Load the animation

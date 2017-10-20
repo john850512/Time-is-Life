@@ -18,7 +18,7 @@ public class HelloWorldServlet {
 	public static String webSessionID = new String();
 	Map<Set<String>, Session> allSession = new HashMap<Set<String>, Session>();
     @OnMessage
-    public void onMessage(String message, Session session) throws IOException, InterruptedException {
+    public void onMessage(String message, Session session) throws Exception {
     	if(message.startsWith("[web]onOpen")){ //來自web的連線建立
     		webSessionID = session.getId();
     		System.out.println("[server]ReceiveFromWeb(SessionID:"+session.getId()+"):" + message);
@@ -38,7 +38,13 @@ public class HelloWorldServlet {
     	}
     	else if(message.split("]")[1].startsWith("request allpath")){ //來自client的請求導航路徑
             //session.getBasicRemote().sendText("This is the first server message"); 
-    		session.getBasicRemote().sendText(allPath.toString()); 
+    		session.getBasicRemote().sendText("[allpath]"+allPath.toString()); 
+    		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + message);
+    		System.out.println("[server]SendToClient(SessionID:"+session.getId()+"):" + allPath.toString());
+    	}
+    	else if(message.split("]")[1].startsWith("request hospital")){ //
+    		Hospital.webcrawler();
+    		session.getBasicRemote().sendText("[hospital]"+allPath.toString()); 
     		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + message);
     		System.out.println("[server]SendToClient(SessionID:"+session.getId()+"):" + allPath.toString());
     	}

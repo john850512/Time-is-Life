@@ -10,12 +10,12 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -38,6 +38,8 @@ import com.google.maps.android.PolyUtil;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static android.location.LocationManager.NETWORK_PROVIDER;
 import static net.macdidi.google_api_o_i_o_i.R.id.map;
@@ -78,6 +80,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     //tts
     private TextToSpeech mTts;
     private static final int REQ_TTS_STATUS_CHECK = 0;
+    private Handler handler;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,13 +104,9 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         //set data
         SharedPreferences sharedPreferences = getSharedPreferences("Data", MODE_PRIVATE);
         tolerance = sharedPreferences.getFloat("tolerance", 15.0f);
-        //get data from MainActivity
-        Bundle params = getIntent().getExtras();
-        if (params != null) {
-            GeoStr = params.getString("geoinfo");
-        } else {
-            Toast.makeText(MapsActivity.this, "[錯誤訊息]無法取得導航路徑", Toast.LENGTH_SHORT).show();
-        }
+        //get data from Service
+        GeoStr = Servicetest.webSocket_input_allpath;
+
         //定位
         locMgr = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
@@ -139,6 +138,8 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                 }
             }
         });
+        //handler
+        handler = new Handler();
     }
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -159,7 +160,30 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                     Toast.makeText(MapsActivity.this, "[測試模式]\n將當前位置移動到\nlat:"
                             +test_loaction.latitude+"\nlng:"+test_loaction.longitude
                             +"\n在範圍內", Toast.LENGTH_LONG).show();
-                }
+
+                    //判斷距離
+                    int min_distance = 9999999;
+                    int current_ID = 1;
+                    for(int i = 0 ; i < GeoPoint.size() ; ) {
+                        boolean first_Point_flag = true;
+                        while (GeoPoint.get(i).id == current_ID) {//一條一條路徑畫
+                            //第一個點的mark
+                            if (first_Point_flag == true) {
+                                StartPoint = new LatLng(GeoPoint.get(i).Lat, GeoPoint.get(i).Lng);
+                                first_Point_flag = false;
+                                if ((int) D_jw(StartPoint.latitude, StartPoint.longitude, test_loaction.latitude, test_loaction.longitude) < min_distance)
+                                    min_distance = (int) D_jw(StartPoint.latitude, StartPoint.longitude, test_loaction.latitude, test_loaction.longitude);
+                            }
+                            i++;//下一個點
+                            if (i == GeoPoint.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
+                                break;
+                            }
+                        }
+                        current_ID++;//下一條路徑
+                    }
+                        //tts
+                        mTts.speak("最近的救護車距離您"+min_distance+"公尺", TextToSpeech.QUEUE_FLUSH, null,null);
+                    }
                 else{
                     Toast.makeText(MapsActivity.this, "[測試模式]\n將當前位置移動到\nlat:"
                             +test_loaction.latitude+"\nlng:"+test_loaction.longitude
@@ -174,39 +198,9 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             }
         });
 
-        String[] temp = GeoStr.split("\\$");//將字串切割成一條條路徑
-        ArrayList<Integer> receiveID = new ArrayList<Integer>(); //儲存所有路徑的id編號 每一個元素都是一條的ID
-        ArrayList<String> SingleGeoStr = new ArrayList<String>(); //儲存所有的所有 每一個元素都是一條完整路徑
+        //更新路徑timer
+        callAsynchronousTask();
 
-        for(int i = 1 ; i < temp.length ; i+=2){
-            //將一條路徑的id跟中途點資訊add到ArrayList中
-            //Log.d("myTag", temp[i]+" "+temp[i+1]+" \n"+i+" "+temp.length);
-            receiveID.add( Integer.valueOf(temp[i]) );//第1  3 5 7 9...都是ID
-            SingleGeoStr.add(temp[i+1]);//2 4 6 8 10...都是路徑資訊
-        }
-
-        //分割一條完整的路徑，得到各中途點的經緯度
-        for(int i = 0 ; i < SingleGeoStr.size() ; ++i) {
-            //分割成許多中途點 中途點間彼此用" "作為分割
-            String[] spiltGeoInfo = SingleGeoStr.get(i).split(" ");//中途點
-            /*
-                        //DEBUG用 查看被分割的字串，這裡分割的結果是單一路徑的所有點的經緯度
-                        for(int j = 0 ;j < spiltGeoInfo.length ; ++j){
-                        Log.d("spiltGeoInfo",spiltGeoInfo[j]+"\n");
-                        }*/
-
-            for(int j = 0 ; j < spiltGeoInfo.length ; ++j){
-                GeoInfo p = new GeoInfo();
-                p.id = receiveID.get(i);
-                //經緯度之間是用","作為分割
-                p.Lng = Double.parseDouble(spiltGeoInfo[j].split(",")[0]);
-                p.Lat = Double.parseDouble(spiltGeoInfo[j].split(",")[1]);
-                GeoPoint.add(p);
-                //判斷距離
-                Single_Path_Point_Info.add(new LatLng(p.Lat,p.Lng));
-                //Log.d("myTag",GeoPoint.get(j).id+" " + GeoPoint.get(j).Lng+ " " + GeoPoint.get(j).Lat +"\n");
-            }
-        }
         //定位
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -215,18 +209,26 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         }
         //地圖中心移到目前位置
         //Location location = locMgr.getLastKnownLocation(bestProv);
-        //第一次用網路訂位而不是用gps，不然會return null
+        //第一次用網路位而不是用gps，不然會return null
         Location location = locMgr.getLastKnownLocation(NETWORK_PROVIDER);
-        LatLng cur_location = new LatLng(location.getLatitude(),location.getLongitude());
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(cur_location,13));//中心是起點
-        //移掉前一個mark，重新定位
+        LatLng cur_internet_location = new LatLng(location.getLatitude(),location.getLongitude());
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(cur_internet_location,13));//中心是起點
+
+        //如果不是第一次定位就移掉前一個mark，重新定位
         if(!first_flag){
             nowLocation_marker.remove();
         }
         first_flag = false;
-        nowLocation_marker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).position(cur_location).title("目前位置"));
+        nowLocation_marker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).position(cur_internet_location).title("目前位置"));
         nowLocation_marker.setDraggable(true);
-        test_loaction =  cur_location;
+        test_loaction =  cur_internet_location;
+
+        DrawLine();//畫出路線(之後要改成定時偵測是否有新路徑，然後更新)
+    }
+    public void onDestroy(){
+        handler.removeCallbacks(renew_path_data_timer);
+        Toast.makeText(this, "Service stop1", Toast.LENGTH_SHORT).show();
+        super.onDestroy();
     }
     //actionbar menu
     @Override
@@ -275,9 +277,21 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             t.show();
         }
     }
+    public static double D_jw(double wd1,double jd1,double wd2,double jd2) //計算兩點距離(公尺)
+    {
+        double x,y,out;
+        double PI=3.14159265;
+        double R=6.371229*1e6;
+
+        x=(jd2-jd1)*PI*R*Math.cos( ((wd1+wd2)/2) *PI/180)/180;
+        y=(wd2-wd1)*PI*R/180;
+        out=Math.hypot(x,y);
+        return out;
+    }
     public void DrawLine() {
         //畫出路徑
         int current_ID = MainActivity.machineID;
+        int min_distance = 9999999;
         for(int i = 0 ; i < GeoPoint.size() ; ){
             PolylineOptions polylineOpt = new PolylineOptions();//要畫出的線段
             /*如何判斷不同條的路徑資訊?
@@ -285,12 +299,14 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                             每一條完整的路徑都應該具有一個路徑編號
                        */
             boolean first_Point_flag = true;
-            while(GeoPoint.get(i).id == current_ID){
+            while(GeoPoint.get(i).id == current_ID){//一條一條路徑畫
                 //第一個點的mark
                 if(first_Point_flag == true){
                     StartPoint = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
                     mMap.addMarker(new MarkerOptions().position(StartPoint).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)).title("起點"));
                     first_Point_flag = false;
+                    if( (int)D_jw(StartPoint.latitude,StartPoint.longitude,test_loaction.latitude,test_loaction.longitude) < min_distance)
+                        min_distance = (int)D_jw(StartPoint.latitude,StartPoint.longitude,test_loaction.latitude,test_loaction.longitude);
                 }
                 //最後一個點的mark
                 if(i+1 == GeoPoint.size()){
@@ -318,6 +334,10 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             polylineOpt.width(13);
 
             mMap.addPolyline(polylineOpt);
+
+            //tts
+            mTts.speak("最近的救護車距離您"+min_distance+"公尺", TextToSpeech.QUEUE_FLUSH, null,null);
+
         }
     }
     //定位
@@ -385,5 +405,62 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     @Override
     public void onProviderDisabled(String provider) {
 
+    }
+    //Timer
+    Runnable renew_path_data_timer = new Runnable() {
+        public void run() {
+            try {
+                GeoPoint.clear();
+                Single_Path_Point_Info.clear();
+                GeoStr = Servicetest.webSocket_input_allpath;
+                String[] temp = GeoStr.split("\\$");//將字串切割成一條條路徑
+                ArrayList<Integer> receiveID = new ArrayList<Integer>(); //儲存所有路徑的id編號 每一個元素都是一條的ID
+                ArrayList<String> SingleGeoStr = new ArrayList<String>(); //儲存所有的所有 每一個元素都是一條完整路徑
+
+                for(int i = 1 ; i < temp.length ; i+=2){
+                    //將一條路徑的id跟中途點資訊add到ArrayList中
+                    //Log.d("myTag", temp[i]+" "+temp[i+1]+" \n"+i+" "+temp.length);
+                    receiveID.add( Integer.valueOf(temp[i]) );//第1  3 5 7 9...都是ID
+                    SingleGeoStr.add(temp[i+1]);//2 4 6 8 10...都是路徑資訊
+                }
+
+                //分割一條完整的路徑，得到各中途點的經緯度
+                for(int i = 0 ; i < SingleGeoStr.size() ; ++i) {
+                    //分割成許多中途點 中途點間彼此用" "作為分割
+                    String[] spiltGeoInfo = SingleGeoStr.get(i).split(" ");//中途點
+                    /*
+                                        //DEBUG用 查看被分割的字串，這裡分割的結果是單一路徑的所有點的經緯度
+                                        for(int j = 0 ;j < spiltGeoInfo.length ; ++j){
+                                        Log.d("spiltGeoInfo",spiltGeoInfo[j]+"\n");
+                                        }*/
+
+                    for(int j = 0 ; j < spiltGeoInfo.length ; ++j){
+                        GeoInfo p = new GeoInfo();
+                        p.id = receiveID.get(i);
+                        //經緯度之間是用","作為分割
+                        p.Lng = Double.parseDouble(spiltGeoInfo[j].split(",")[0]);
+                        p.Lat = Double.parseDouble(spiltGeoInfo[j].split(",")[1]);
+                        GeoPoint.add(p);
+                        //判斷距離
+                        Single_Path_Point_Info.add(new LatLng(p.Lat,p.Lng));
+                        //Log.d("myTag",GeoPoint.get(j).id+" " + GeoPoint.get(j).Lng+ " " + GeoPoint.get(j).Lat +"\n");
+                    }
+                    DrawLine();
+                }
+
+            } catch (Exception e) {
+
+            }
+        }
+    };
+    public void callAsynchronousTask() {
+        Timer timer = new Timer();
+        TimerTask doAsynchronousTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(renew_path_data_timer);
+            }
+        };
+        timer.schedule(doAsynchronousTask, 0, 10000); //execute in every ___ ms
     }
 }

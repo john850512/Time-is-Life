@@ -10,7 +10,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 
 public class ChooseClientActivity extends AppCompatActivity {
     private Button carClientBtn,ambulanceClientBtn;

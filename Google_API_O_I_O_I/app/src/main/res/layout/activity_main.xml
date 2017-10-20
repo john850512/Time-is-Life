@@ -9,17 +9,6 @@
     android:background="@drawable/bg">
 
     <Button
-        android:text="按我"
-        android:id="@+id/Notify_Button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/login_button_selector"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="18dp"/>
-
-    <Button
         android:text="關於我們"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
