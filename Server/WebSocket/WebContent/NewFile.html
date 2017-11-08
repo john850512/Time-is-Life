@@ -1,270 +1,409 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>Directions service (complex)</title>
-    <style>
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-      #map {
-        height: 80%;
-		padding-top: 10px;
-      }
-      #warnings-panel {
-        width: 100%;
-        height:10%;
-        text-align: center;
-      }
-	  #floating-panel {
-	    position: absolute;
-	    top: 10px;
- 	    left: 40%;
- 	    z-index: 5;
- 	    background-color: #fff;
- 	    padding: 5px;
-  	    border: 1px solid #999;
- 	    text-align: center;
- 	    font-family: 'Roboto','sans-serif';
-  	    line-height: 30px;
- 	    padding-left: 10px;
-	  }
+	<head>
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+		<meta charset="utf-8">
+		<title>Time is Life - 即時路況模擬</title>
+		<style>
+			html, body {
+				height:400px;
+				width:1300px;
+				padding:5px 5px 5px 5px; 
+				background-color: black;
+			}
+			#top{
+				width:1294px;
+				height: 100px;		
+				text-align: center;
+				border:3px solid white;
+				font-family: 'DFKai-sb','sans-serif';
+				font-size:45px;
+				color:white;
+				background-image:url(https://i.imgur.com/pbXZ6ei.png);
+				background-position: 0% 40%;
+			}
+			#map {
+				width:794px;
+				height: 505px;
+				float: left;
+				border:3px solid white;
+			}
+			#floating-panel {
+				position: absolute;
+				margin-top:9%; 
+				top: 10px;
+				left: 20%;
+				z-index: 5;
+				background-color: #fff;
+				padding: 5px;
+				border: 1px solid #999;
+				text-align: center;
+				font-family: 'fantasy','sans-serif';
+				line-height: 30px;
+				padding-left: 10px;
+			}
+			#right-panel {
+				width:494px;
+				height:40px;
+				font-family: 'fantasy','sans-serif';
+				border:3px solid white;
+				color:white;
+				float:left;
+			}
+			#right-panel_1 {
+				width:494px;
+				height:40px;
+				font-family: 'fantasy','sans-serif';
+				border:3px solid white;
+				color:white;
+				float:left;
+			}
+			#warnings-panel {
+				height:387px;
+				width:494px;
+				float:left;
+				border:3px solid white;
+				color:white;
+				overflow-y:scroll;
+			}	
+			#console-panel {
+				height:20px;
+				width:494px;
+				float:left;
+				border:3px solid white;
+				color:white;
+			}			
+		</style>
+	</head>
+	<body>
+		<div id = "top"></div>
+		<div id="floating-panel">
+			<b>Start: </b>
+			<select id="start">
+			  <option value="高雄大學">高雄大學</option>
+			</select>
+			<b>End: </b>
+			<select id="end">
+			  <option value="楠梓加工區">楠梓加工區</option>
+			  <option value="捷運油廠國小站">捷運油廠國小站</option>
+			  <option value="楠梓家樂福">楠梓家樂福</option>
+			  <option value="台北火車站">台北火車站</option>
+			  <option value="高雄火車站">高雄火車站</option>
+			  <option value="義守大學">義守大學</option>
+			  <option value="中山高中">中山高中</option>
+			  <option value="屏東火車站">屏東火車站</option>
+			</select>
+		</div>
+		<div id="map"></div>
+		<div id="right-panel"><p>連線狀態：<span id = 'stat'></span></p></div>
+		<div id="right-panel_1"><p>目前共有：<span id = 'ambluance_num'></span> 輛 <img src="https://i.imgur.com/Qz00z53.png"  height="23" width="23"> 在值勤中   <span id = 'driver_num'>'></span> 輛 <img src="https://i.imgur.com/7NwDYJQ.png"  height="23" width="23"> 駕駛再使用本系統</p></div>
+		<div id="warnings-panel">Console：<br /></div>
+		<div id="console-panel"><input type = "text" id = "console_input" size = "66" /></div>
+		<script>
+		//自定義startsWith(javascript沒有這func)
+		//判斷字串開頭是否為指定的字
+		//回傳: bool
+		String.prototype.startsWith = function(prefix)
+		{
+			return (this.substr(0, prefix.length) === prefix);
+		}
+		//Console
+		document.getElementById('warnings-panel').innerHTML +=">>help<br />" + "您可以使用以下指令進行相關操作：<br \>1.help 查詢相關指令<br \>2.chage [車輛編號] 變更正在操作中的車輛<br \>3.clean 清空螢幕畫面<br \>";
+		document.getElementById('console_input').onkeypress = function(e){
+			var keyCode = e.keyCode || e.which;
+			if (keyCode == '13'){
+				document.getElementById('warnings-panel').innerHTML +=">>" + this.value + "<br />";
+				var stringArray = new Array();
+				stringArray = this.value.split(" ")[0]; //字串切割開頭
+				switch(stringArray){
+					case "help":document.getElementById('warnings-panel').innerHTML += "您可以使用以下指令進行相關操作：<br \>1.help 查詢相關指令<br \>2.chage [車輛編號] 變更正在操作中的車輛<br \>3.clean 清空螢幕畫面<br \>";break;
+					case "change":document.getElementById('warnings-panel').innerHTML += "目前操作中的車輛編號是："+this.value.split(" ")[1]+"<br \>";break;
+					case "clean":document.getElementById('warnings-panel').innerHTML = "Console：<br \>";break;
+					default:document.getElementById('warnings-panel').innerHTML += " is not a correct command <br \>";break;
+				}
+				this.value = "";
+				return false;
+			}
+		}
+		//自定義indexOf
+		Array.prototype.indexOf || (Array.prototype.indexOf = function(d, e) {
+			var a;
+			if (null == this) throw new TypeError('"this" is null or not defined');
+			var c = Object(this),
+				b = c.length >>> 0;
+			if (0 === b) return -1;
+			a = +e || 0;
+			Infinity === Math.abs(a) && (a = 0);
+			if (a >= b) return -1;
+			for (a = Math.max(0 <= a ? a : b - Math.abs(a), 0); a < b;) {
+				if (a in c && c[a] === d) return a;
+				a++
+			}
+			return -1
+		});
+		
+		//google map api for initial map 
+		var markerArray,directionsService,map,directionsDisplay,stepDisplay;
+		//websocket
+		var webSocket = new WebSocket('ws://192.168.1.143:8080/WebSocket/websocket');
+		//navigation request
+		var navID = 1;
+		var originPos = "高雄大學";
+		var destinationPos = "楠梓家樂福";
+		let idSet = new Set(); //紀錄現有救護車ID
+		document.getElementById('ambluance_num').innerHTML = idSet.size; //計算值勤中的救護車
+		//client Position
+		var allMyCarMarkers = [];//記錄所有車輛的marker
+		var machineID = []; //紀錄現有車輛ID
+		var clientPos_Lng,clientPos_Lat;
+		var clientPosMarker;
+		document.getElementById('driver_num').innerHTML = 0; //計算值勤中的救護車
+		
+		webSocket.onerror = function(event) {
+			onError(event)
+		};
 
-    </style>
-  </head>
-  <body>
-    <div id="floating-panel">
-    <b>Start: </b>
-    <select id="start">
-      <option value="高雄大學">高雄大學</option>
-    </select>
-    <b>End: </b>
-    <select id="end">
-      <option value="楠梓加工區">楠梓加工區</option>
-      <option value="捷運油廠國小站">捷運油廠國小站</option>
-      <option value="楠梓家樂福">楠梓家樂福</option>
-	  <option value="台北火車站">台北火車站</option>
-	  <option value="高雄火車站">高雄火車站</option>
-	  <option value="義守大學">義守大學</option>
-	  <option value="台中火車站">台中火車站</option>
-	  <option value="屏東火車站">屏東火車站</option>
-    </select>
-    </div>
-    <div id="map"></div>
-    &nbsp;
-    <div id="warnings-panel"></div>
-    <script>
-    
-    //google map api for initial map 
-    var markerArray,directionsService,map,directionsDisplay,stepDisplay;
-    //websocket
-    var webSocket = new WebSocket('ws://192.168.1.143:8080/WebSocket/websocket');
-    //navigation request
-	var navID = 1;
-	var originPos = "高雄大學";
-	var destinationPos = "楠梓家樂福";
-	
-    webSocket.onerror = function(event) {
-        onError(event)
-    };
+		webSocket.onopen = function(event) {
+			onOpen(event)
+		};
 
-    webSocket.onopen = function(event) {
-        onOpen(event)
-    };
+		webSocket.onmessage = function(event) {
+			onMessage(event)
+		};
 
-    webSocket.onmessage = function(event) {
-        onMessage(event)
-    };
-
-    function onMessage(event) {
-		var navID = Integer.valueOf(event.data.split("$")[1]);
-		var originPos = message.split("$")[2].split(" ")[0];
-		var destinationPos = message.split("$")[2].split(" ")[1];
-	    calculateAndDisplayRoute(
-	    		directionsDisplay, directionsService, markerArray, stepDisplay, map);
-    }
-
-    function onOpen(event) {
-        webSocket.send('[web]onOpen');
-    }
-
-    function onError(event) {
-        alert(event.data);
-    }
-
-    function start() {
-        //webSocket.send('hello');
-        return false;
-    }
-    
-    //----------------------------------------------------------------------
-	
-	function initMap() {
-	  markerArray = [];
-	
-	  // Instantiate a directions service.
-	  directionsService = new google.maps.DirectionsService;
-	
-	  // Create a map and center it on Manhattan.
-	  map = new google.maps.Map(document.getElementById('map'), {
-	    zoom: 13,
-	    center: {lat: 22.7344154, lng: 120.2829894}//高雄大學
-	  });
-	
-	  // Create a renderer for directions and bind it to the map.
-	  directionsDisplay = new google.maps.DirectionsRenderer({map: map});
-	
-	  // Instantiate an info window to hold step text.
-	  stepDisplay = new google.maps.InfoWindow;
-	
-	  // Display the route between the initial start and end selections.
-	  /*
-	  calculateAndDisplayRoute(
-	      directionsDisplay, directionsService, markerArray, stepDisplay, map);
-	  */
-	  // Listen to change events from the start and end lists.
-	  var onChangeHandler = function() {
-	    calculateAndDisplayRoute(
-	        directionsDisplay, directionsService, markerArray, stepDisplay, map);
-	  };
-	  document.getElementById('start').addEventListener('change', onChangeHandler);
-	  document.getElementById('end').addEventListener('change', onChangeHandler);
-	}
-	
-	function calculateAndDisplayRoute(directionsDisplay, directionsService,
-	    markerArray, stepDisplay, map) {
-	  // First, remove any existing markers from the map.
-	  for (var i = 0; i < markerArray.length; i++) {
-		if(i % 2 == 0)continue;//更改同時也要改showSteps裡的marker設定
-	    markerArray[i].setMap(null);
-	  }
-	
-	  // Retrieve the start and end locations and create a DirectionsRequest using
-	  // WALKING directions.
-	  // 用走路的模式偵測
-	  // 用汽車會一直有微靠左行這種指令 點會變多
-	  directionsService.route({
-	    origin: document.getElementById('start').value,
-	    destination: document.getElementById('end').value,
-	    //origin: originPos,
-	    //destination: destinationPos,
-	    travelMode: google.maps.TravelMode.DRIVING
-	    
-	    
-	    
-	  }, function(response, status) {
-	    // Route the directions and pass the response to a function to create
-	    // markers for each step.
-	    if (status === google.maps.DirectionsStatus.OK) {
-	      document.getElementById('warnings-panel').innerHTML =
-	          '<b>' + response.routes[0].warnings + '</b></br>';
-	      directionsDisplay.setDirections(response);
-	      showSteps(response, markerArray, stepDisplay, map);
-		  
-	    } else {
-	      window.alert('Directions request failed due to ' + status);
-	    }
-	  });
-	}
-	
-	function showSteps(directionResult, markerArray, stepDisplay, map) {
-	  // For each step, place a marker, and add the text to the marker's infowindow.
-	  // Also attach the marker to an array so we can keep track of it and remove it
-	  // when calculating new routes.
-	   // routes[]是查詢的路徑結果
-	  // 除非provideRouteAlternatives 是true不然routes[]基本上只會有一條結果 
-	  // 在導航指令更新的時候會有新的Steps點
-	  // 每一個legs包含一連串的steps
-	
-	  var myRoute = directionResult.routes[0].legs[0];
-	  var i = 0;
-	  var tempPostString = "[web]gma"+"$"+navID+"$";
-	  //一點點
-	/*  
-	  for (i = 0; i < myRoute.steps.length; i++) {
-	    var marker = markerArray[i] = markerArray[i] || new google.maps.Marker;
-	    marker.setMap(map);
-	    marker.setPosition(myRoute.steps[i].start_location);
-		var marker1 = markerArray[i] = markerArray[i] || new google.maps.Marker;
-		marker.setMap(map);
-		//add latlng into tempPostString
-		tempPostString +=i+': '+myRoute.steps[0].start_location.lat()+' '+myRoute.steps[0].start_location.lng()+'\n';
-		//取得資訊
-		document.getElementById('warnings-panel').innerHTML +=myRoute.steps[i].start_location + "</br>";
-	    attachInstructionText(
-	        stepDisplay, marker, myRoute.steps[i].instructions, map);
-	  }
-	  //post to php
-	  post_to_url('test.php', {"0":tempPostString});
-	*/  
-	  
-	  //很多點
-	  //取得單一經緯度.lat() .lng()
-		var flag = false;//第一筆不要空格
-	    for (i = 0; i < directionResult.routes[0].overview_path.length  ; i++) {
-	    	if(i % 2 == 0)continue;//更改同時也要改calculateAndDisplayRoute裡面的初始化
-			var marker = markerArray[i] = markerArray[i] || new google.maps.Marker;
-			marker.setMap(map);
-			marker.setPosition(directionResult.routes[0].overview_path[i]);
-			
-			//取得資訊
-			document.getElementById('warnings-panel').innerHTML +=directionResult.routes[0].overview_path[i] +"0."+i + " " +"1."+directionResult.routes[0].overview_path.length+"</br>";
-			if(flag){
-				tempPostString += ' ';
+		function onMessage(event) {
+			//document.getElementById('warnings-panel').innerHTML +=event.data+"<br \>";
+			if(event.data.split("]")[1].startsWith("navigation")){ //救護車的導航請求訊息
+				var navID = Integer.valueOf(event.data.split("$")[1]); //導航編號
+				idSet.add(navID);
+				document.getElementById('ambluance_num').innerHTML = idSet.size();
+				var originPos = message.split("$")[2].split(" ")[0]; //起點
+				var destinationPos = message.split("$")[2].split(" ")[1]; //終點
+				calculateAndDisplayRoute(directionsDisplay, directionsService, markerArray, stepDisplay, map);
+			}
+			else if(event.data.split("]")[1].startsWith("send itselfPosition:")){ //一般車輛傳送當前位置的訊息
+				//範例訊息:
+				//[client ID:1]send itselfPosition:lat/lng: (22.7262692,120.2813784)
+				var ID = event.data.split(":")[1].split("]")[0];//車輛編號	
+				clientPos_Lat = event.data.split("(")[1].split(",")[0];//緯度
+				clientPos_Lng = event.data.split("(")[1].split(",")[1].split(")")[0];//經度
+				document.getElementById('warnings-panel').innerHTML +="接收到車輛ID: "+ID+"的GPS訊號(" + clientPos_Lng + "," + clientPos_Lat + ")<br \>";
+				
+				try{
+					var is_find = false;
+					for(var i=0;i<machineID.length;i++){
+						if(machineID[i] == ID){ //如果該點紀錄過
+							for(var j=0;j<allMyCarMarkers.length;j++){//找出對應的marker
+								if(allMyCarMarkers[j].id === ID){
+									var clientPos = new google.maps.LatLng(clientPos_Lat, clientPos_Lng);
+									allMyCarMarkers[j].setPosition(clientPos);
+									break;
+								}
+							}
+							is_find = true;
+						}
+					}
+					if(!is_find){//找不到該汽車位置(還沒新增過)
+						machineID.push(ID);//新增
+						document.getElementById('driver_num').innerHTML = machineID.length; //計算值勤中的救護車
+						clientPosMarker = new google.maps.Marker({
+							position: new google.maps.LatLng(clientPos_Lat, clientPos_Lng),
+							map: map,
+							title: '車輛ID:'+ID+'當前位置',
+							draggable:true,
+							id: ID
+						});
+						google.maps.event.addListener(clientPosMarker, 'dragend', draggableEvent);
+						clientPosMarker.setIcon("https://i.imgur.com/7NwDYJQ.png");
+						clientPosMarker.setZIndex(100);
+						allMyCarMarkers.push(clientPosMarker);
+						clientPosMarker.setMap(map);
+					}
+				}catch(err){
+				}
 				
 			}
-			tempPostString +=directionResult.routes[0].overview_path[i].lng()+','+directionResult.routes[0].overview_path[i].lat();
-			flag = true;
-	    } 
-	    
-		//post_to_url('test.php', {"0":tempPostString});
-		//post_to_url("http://localhost:5580", {"0":tempPostString});
-	    webSocket.send(tempPostString);
-	    navID++;
-	    //return false;
-	}
-	
-	function attachInstructionText(stepDisplay, marker, text, map) {
-	  google.maps.event.addListener(marker, 'click', function() {
-	    // Open an info window when the marker is clicked on, containing the text
-	    // of the step.
-	    stepDisplay.setContent(text);
-	    stepDisplay.open(map, marker);
-	  });
-	}
-	function post_to_url(path, params, method) {
-	    method = method || "post"; // Set method to post by default, if not specified.
-	    // The rest of this code assumes you are not using a library.
-	    // It can be made less wordy if you use one.
-	    var form = document.createElement("form");
-	    form.setAttribute("method", method);
-	    form.setAttribute("action", path);
-	
-	    var hiddenField = document.createElement("input");
-	    hiddenField.setAttribute("type", "hidden");
-	    hiddenField.setAttribute("name", "info");
-	    hiddenField.setAttribute("value", "info");	
-		form.appendChild(hiddenField);
-		
-	    for(var key in params) {
-	        var hiddenField = document.createElement("input");
-	        hiddenField.setAttribute("type", "hidden");
-	        hiddenField.setAttribute("name", key);
-	        hiddenField.setAttribute("value", params[key]);
-	
-	        form.appendChild(hiddenField);
-	    }
-	
-	    document.body.appendChild(form);    // Not entirely sure if this is necessary
-	    form.submit();
-	}
-	
+			else if(event.data.split("]")[1].startsWith("close Connection")){ //一般車輛關閉連線的訊息(刪除該marker)
+				//Ex:[client ID:1]close Connection
+				var ID = event.data.split(":")[1].split("]")[0];//車輛編號	
+				try{
+					for(var i=0;i<machineID.length;i++){
+						if(machineID[i] == ID){ //找到該點從連線中的車輛刪除
+							machineID.splice(i,1);
+							break;
+						}
+					}
+					document.getElementById('driver_num').innerHTML = machineID.length; //計算值勤中的救護車
+					
+					for(var i=0;i<=allMyCarMarkers.length;i++){//找出對應的marker刪除
+						if(allMyCarMarkers[i].id === ID){	
+							allMyCarMarkers[i].setMap(null);
 
-    </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuLxs9L5DAbvCWRpMVWAk7VpBZ7OuSO1Q&signed_in=true&callback=initMap"
-        async defer></script>
-  </body>
+							allMyCarMarkers.splice(i,1);
+							break;
+						}
+					}
+				}catch(err){
+				}
+			}
+		}
+
+		function onOpen(event) {
+			webSocket.send('[web]WebOnOpen');
+			document.getElementById('stat').innerHTML = '與伺服器連線成功..';
+		}
+
+		function onError(event) {
+			document.getElementById('stat').innerHTML = '尚未與伺服器連線';
+		}
+		
+		//draggable event
+		function draggableEvent(evt){
+			clientPos_Lat = evt.latLng.lat();
+			clientPos_Lng = evt.latLng.lng();
+			webSocket.send("[web]chgDriverPos:("+clientPos_Lat+","+clientPos_Lng+")");
+			
+		}
+		//----------------------------------------------------------------------
+	
+		function initMap() {
+			
+			markerArray = [];
+		
+			// Instantiate a directions service.
+			directionsService = new google.maps.DirectionsService;
+		
+			// Create a map and center it on Manhattan.
+			map = new google.maps.Map(document.getElementById('map'), {
+				zoom: 13,
+				center: {lat: 22.7344154, lng: 120.2829894}//高雄大學
+			});
+		
+			// Create a renderer for directions and bind it to the map.
+			directionsDisplay = new google.maps.DirectionsRenderer({map: map});
+			
+			// Instantiate an info window to hold step text.
+			stepDisplay = new google.maps.InfoWindow;
+		
+			// Display the route between the initial start and end selections.
+			/*
+			calculateAndDisplayRoute(
+				directionsDisplay, directionsService, markerArray, stepDisplay, map);
+			*/
+			// Listen to change events from the start and end lists.
+			var onChangeHandler = function() {
+				calculateAndDisplayRoute(
+					directionsDisplay, directionsService, markerArray, stepDisplay, map);
+			};
+			document.getElementById('start').addEventListener('change', onChangeHandler);
+			document.getElementById('end').addEventListener('change', onChangeHandler);
+			
+		}
+		
+		function calculateAndDisplayRoute(directionsDisplay, directionsService,
+			markerArray, stepDisplay, map) {
+		  // First, remove any existing markers from the map.
+		  for (var i = 0; i < markerArray.length; i++) {
+			if(i % 2 == 0)continue;//更改同時也要改showSteps裡的marker設定
+			markerArray[i].setMap(null);
+		  }
+		
+		  // Retrieve the start and end locations and create a DirectionsRequest using
+		  // WALKING directions.
+		  // 用走路的模式偵測
+		  // 用汽車會一直有微靠左行這種指令 點會變多
+		  directionsService.route({
+			origin: document.getElementById('start').value,
+			destination: document.getElementById('end').value,
+			//origin: originPos,
+			//destination: destinationPos,
+			travelMode: google.maps.TravelMode.DRIVING
+			  
+		  }, function(response, status) {
+			// Route the directions and pass the response to a function to create
+			// markers for each step.
+			if (status === google.maps.DirectionsStatus.OK) {
+			  //document.getElementById('warnings-panel').innerHTML ='<b>' + response.routes[0].warnings + '</b></br>';	
+			  directionsDisplay.setDirections(response);
+			  showSteps(response, markerArray, stepDisplay, map);
+			  
+			} else {
+			  window.alert('Directions request failed due to ' + status);
+			}
+		  });
+		}
+	
+		function showSteps(directionResult, markerArray, stepDisplay, map) {
+			  // For each step, place a marker, and add the text to the marker's infowindow.
+			  // Also attach the marker to an array so we can keep track of it and remove it
+			  // when calculating new routes.
+			   // routes[]是查詢的路徑結果
+			  // 除非provideRouteAlternatives 是true不然routes[]基本上只會有一條結果 
+			  // 在導航指令更新的時候會有新的Steps點
+			  // 每一個legs包含一連串的steps
+			
+			  var myRoute = directionResult.routes[0].legs[0];
+			  var tempPostString = "[web]gma"+"$"+navID+"$";
+			  //一點點
+			/*  
+			  for (i = 0; i < myRoute.steps.length; i++) {
+				var marker = markerArray[i] = markerArray[i] || new google.maps.Marker;
+				marker.setMap(map);
+				marker.setPosition(myRoute.steps[i].start_location);
+				var marker1 = markerArray[i] = markerArray[i] || new google.maps.Marker;
+				marker.setMap(map);
+				//add latlng into tempPostString
+				tempPostString +=i+': '+myRoute.steps[0].start_location.lat()+' '+myRoute.steps[0].start_location.lng()+'\n';
+				//取得資訊
+				document.getElementById('warnings-panel').innerHTML +=myRoute.steps[i].start_location + "</br>";
+				attachInstructionText(
+					stepDisplay, marker, myRoute.steps[i].instructions, map);
+			  }
+			  //post to php
+			  post_to_url('test.php', {"0":tempPostString});
+			*/  
+		  
+		  //很多點
+		  //取得單一經緯度.lat() .lng()
+			var flag = false;//第一筆不要空格
+			var i = 0;//跑loop
+			document.getElementById('warnings-panel').innerHTML +="===============救護車"+navID+"行駛路徑===============</br>";
+			for (i = 0; i < directionResult.routes[0].overview_path.length  ; i++) {
+				if(i % 2 == 0 && i != 0)continue;//更改同時也要改calculateAndDisplayRoute裡面的初始化
+				var marker = markerArray[i] = markerArray[i] || new google.maps.Marker;
+				if(i == 0){
+					marker.setIcon("https://i.imgur.com/CS6t8EC.png");
+					marker.setZIndex(100);
+				}
+				marker.setMap(map);
+				marker.setPosition(directionResult.routes[0].overview_path[i]);
+				
+				//取得資訊
+				
+				document.getElementById('warnings-panel').innerHTML +=i+". " + directionResult.routes[0].overview_path[i] + "</br>";
+				
+				if(flag){
+					tempPostString += ' ';
+				}
+				tempPostString +=directionResult.routes[0].overview_path[i].lng()+','+directionResult.routes[0].overview_path[i].lat();
+				flag = true;
+			} 
+			//attachInstructionText(stepDisplay, marker, myRoute.steps[i].instructions, map);
+			webSocket.send(tempPostString);
+			navID++;
+			//return false;
+		}
+		
+		function attachInstructionText(stepDisplay, marker, text, map) {
+		  google.maps.event.addListener(marker, 'click', function() {
+			// Open an info window when the marker is clicked on, containing the text
+			// of the step.
+			stepDisplay.setContent(text);
+			stepDisplay.open(map, marker);
+		  });
+		}
+		</script>
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuLxs9L5DAbvCWRpMVWAk7VpBZ7OuSO1Q&signed_in=true&callback=initMap"
+			async defer></script>
+	</body>
 </html>

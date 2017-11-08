@@ -16,6 +16,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -62,25 +64,31 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         double Lat;
         double Lng;
     };
-    private ArrayList<GeoInfo> GeoPoint = new ArrayList<GeoInfo>();//所有點(包含不同路徑)的LIST
-    private GoogleMap mMap;
+    private static ArrayList<GeoInfo> GeoPoint = new ArrayList<GeoInfo>();//所有點(包含不同路徑)的LIST
+    private static GoogleMap mMap;
     private Button btn;
-    private LatLng StartPoint, EndPoint;//路線起點、終點marker
+    private static LatLng StartPoint, EndPoint;//路線起點、終點marker
 
     //test
-    private LatLng test_loaction;
+    private static LatLng test_loaction;
     private EditText testLatInput, testLngInput;
     public static double tolerance;
     private ArrayList<LatLng> Single_Path_Point_Info = new ArrayList<LatLng>();//isOnPathLocation Function的參數(一條路徑)
     //定位
-    private Marker nowLocation_marker;
+    private static Marker nowLocation_marker;
     private LocationManager locMgr;
     private String bestProv;
-    private boolean first_flag;//是否第一次定位
+    private static boolean first_flag;//是否第一次定位
     //tts
-    private TextToSpeech mTts;
+    private static TextToSpeech mTts;
     private static final int REQ_TTS_STATUS_CHECK = 0;
     private Handler handler;
+    //timer
+    Timer timer;
+    TimerTask doAsynchronousTask;
+    //判斷方向
+    //一般用路人向量
+    private static double Car_direction[] = {0,0};
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,6 +116,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         GeoStr = Servicetest.webSocket_input_allpath;
 
         //定位
+        test_loaction = new LatLng(0,0);
         locMgr = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
         bestProv = locMgr.getBestProvider(criteria, true);
@@ -121,6 +130,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+        locMgr.requestLocationUpdates(bestProv, 1000, 1, this);//每秒更新一次位置
         first_flag = true;
         //tts
         Intent checkIntent = new Intent();
@@ -145,25 +155,43 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+
             @Override
             public void onMarkerDragStart(Marker marker) {
                 // TODO Auto-generated method stub
             }
+
             @Override
             public void onMarkerDragEnd(Marker marker) {
                 // TODO Auto-generated method stub
+                //計算向量(判斷方向)
+                if (!marker.getPosition().equals(test_loaction)){ //位置有更新過
+                    LatLng last_loc = test_loaction;//取得前一個位置  在test_location
+                    //計算向量
+                    Car_direction [0] = marker.getPosition().latitude-last_loc.latitude;
+                    Car_direction [1] = marker.getPosition().longitude-last_loc.longitude;
+                }
+                //更新test_location位置
+                test_loaction = new LatLng(marker.getPosition().latitude,marker.getPosition().longitude);
+                //模擬GPS功能，更新web的車輛位置
+                if(GlobalVariable.is_simulateGPS)Servicetest.sendSimulateGPS(test_loaction);
+                //更新畫面上位置資訊
                 testLatInput.setText(String.valueOf(test_loaction.latitude));
                 testLngInput.setText(String.valueOf(test_loaction.longitude));
-                test_loaction = new LatLng(marker.getPosition().latitude,marker.getPosition().longitude);
+
                 //判斷誤差，在__公尺內提示
-                if(PolyUtil.isLocationOnPath(test_loaction,Single_Path_Point_Info,false,tolerance)){
+                if(PolyUtil.isLocationOnPath(test_loaction,Single_Path_Point_Info,false,tolerance)) {
                     Toast.makeText(MapsActivity.this, "[測試模式]\n將當前位置移動到\nlat:"
-                            +test_loaction.latitude+"\nlng:"+test_loaction.longitude
-                            +"\n在範圍內", Toast.LENGTH_LONG).show();
+                            + test_loaction.latitude + "\nlng:" + test_loaction.longitude
+                            + "\n在範圍內", Toast.LENGTH_LONG).show();
 
                     //判斷距離
                     int min_distance = 9999999;
                     int current_ID = 1;
+                    //[0][0]救護車相對駕駛第一點前後方 [0][1]救護車相對駕駛第一點左右方
+                    // [1][0]救護車相對駕駛第二點前後方 [1][1]救護車相對駕駛第二點左右方
+                    int site[][] = {{2,2},{2,2}};
+
                     for(int i = 0 ; i < GeoPoint.size() ; ) {
                         boolean first_Point_flag = true;
                         while (GeoPoint.get(i).id == current_ID) {//一條一條路徑畫
@@ -171,8 +199,64 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                             if (first_Point_flag == true) {
                                 StartPoint = new LatLng(GeoPoint.get(i).Lat, GeoPoint.get(i).Lng);
                                 first_Point_flag = false;
-                                if ((int) D_jw(StartPoint.latitude, StartPoint.longitude, test_loaction.latitude, test_loaction.longitude) < min_distance)
-                                    min_distance = (int) D_jw(StartPoint.latitude, StartPoint.longitude, test_loaction.latitude, test_loaction.longitude);
+                                int temp_distance = (int) D_jw(StartPoint.latitude, StartPoint.longitude, test_loaction.latitude, test_loaction.longitude);
+
+                                if (temp_distance < min_distance) {
+                                    min_distance = temp_distance;
+                                    //Ambulance Site to Car now
+                                    double between_Lat = GeoPoint.get(i).Lat - test_loaction.latitude;
+                                    double between_Lng = GeoPoint.get(i).Lng - test_loaction.longitude;
+
+                                    //第一點前後方判斷  用內積公式
+                                    double dot = between_Lat * Car_direction[0] + between_Lng * Car_direction[1];
+                                    double Car_direction_L = Math.sqrt(Math.pow(Car_direction[0], 2) + Math.pow(Car_direction[1], 2));
+                                    double between_direction_L = Math.sqrt(Math.pow(between_Lat, 2) + Math.pow(between_Lng, 2));
+                                    double theta = Math.toDegrees(Math.acos(dot / (Car_direction_L * between_direction_L)));
+                                    //Toast.makeText(MapsActivity.this," "+ theta, Toast.LENGTH_LONG).show();
+                                    if (theta < 67.5)
+                                        site[0][0] = 1;//前方
+                                    else if (theta > 112.5)
+                                        site[0][0] = -1;//後方
+                                    else
+                                        site[0][0] = 0;//無關前後  只關左右
+
+                                    //第一點左右方判斷  用外積公式及右手定則
+                                    double Cross_direction = between_Lng * Car_direction[0] - Car_direction[1] * between_Lat;
+                                    if (Cross_direction > 0 && (theta <= 157.5 && theta >= 22.5))
+                                        site[0][1] = 1;//左方
+                                    else if (Cross_direction < 0 && (theta <= 157.5 && theta >= 22.5))
+                                        site[0][1] = -1;//右方
+                                    else
+                                        site[0][1] = 0;//無關左右  只關前後
+
+
+                                    //第二點前後方判斷  用內積公式
+                                    between_Lat = GeoPoint.get(i + 1).Lat - test_loaction.latitude;
+                                    between_Lng = GeoPoint.get(i + 1).Lng - test_loaction.longitude;
+                                    dot = between_Lat * Car_direction[0] + between_Lng * Car_direction[1];
+                                    Car_direction_L = Math.sqrt(Math.pow(Car_direction[0], 2) + Math.pow(Car_direction[1], 2));
+                                    between_direction_L = Math.sqrt(Math.pow(between_Lat, 2) + Math.pow(between_Lng, 2));
+                                    theta = Math.toDegrees(Math.acos(dot / (Car_direction_L * between_direction_L)));
+                                    if (theta < 67.5)
+                                        site[1][0] = 1;//前方
+                                    else if (theta > 112.5)
+                                        site[1][0] = -1;//後方
+                                    else
+                                        site[1][0] = 0;//無關前後  只關左右
+
+                                    //第二點左右方判斷  用外積公式及右手定則
+                                    Cross_direction = between_Lng * Car_direction[0] - Car_direction[1] * between_Lat;
+                                    if (Cross_direction > 0 && (theta <= 157.5 && theta >= 22.5))
+                                        site[1][1] = 1;//左方
+                                    else if (Cross_direction < 0 && (theta <= 157.5 && theta >= 22.5))
+                                        site[1][1] = -1;//右方
+                                    else
+                                        site[1][1] = 0;//無關左右  只關前後
+                                }
+
+                            }
+                            else {
+                                LatLng now_pos = new LatLng(GeoPoint.get(i).Lat, GeoPoint.get(i).Lng);
                             }
                             i++;//下一個點
                             if (i == GeoPoint.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
@@ -181,13 +265,31 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                         }
                         current_ID++;//下一條路徑
                     }
-                        //tts
-                        mTts.speak("最近的救護車距離您"+min_distance+"公尺", TextToSpeech.QUEUE_FLUSH, null,null);
+
+                    //Toast.makeText(MapsActivity.this, "第一點" +site[0][0] +" "+ site[0][1] +"\n第二點" +site[1][0] +" "+ site[1][1] , Toast.LENGTH_LONG).show();
+
+
+                    //tts
+                    if ((site[0][0] == 0 && site[0][1] == 0) || (site[0][0] == 0 && site[0][1] == 0)){
+                        Toast.makeText(MapsActivity.this, "[測試模式]有方向有問題", Toast.LENGTH_LONG).show();
                     }
+                    //else if
+                    else {
+                        String First_direction = get_Direction(site[0][0],site[0][1]);
+                        String Second_direction = get_Direction(site[1][0],site[1][1]);
+                        if (First_direction.equals(Second_direction))
+                            mTts.speak("最近的救護車距離您"+min_distance+"公尺並且從您的"+First_direction+"向您靠近", TextToSpeech.QUEUE_FLUSH, null,null);
+                        else if ((site[0][0] + site[1][0] == 0) && (site[0][1] + site[1][1] == 0))
+                            mTts.speak("最近的救護車距離您"+min_distance+"公尺並且從您的"+First_direction+"向您靠近", TextToSpeech.QUEUE_FLUSH, null,null);
+                        else
+                            mTts.speak("最近的救護車距離您"+min_distance+"公尺並且從您的"+First_direction+"向您的"+Second_direction+"行駛", TextToSpeech.QUEUE_FLUSH, null,null);
+                    }
+
+                }
                 else{
-                    Toast.makeText(MapsActivity.this, "[測試模式]\n將當前位置移動到\nlat:"
+                    /*Toast.makeText(MapsActivity.this, "[測試模式]\n將當前位置移動到\nlat:"
                             +test_loaction.latitude+"\nlng:"+test_loaction.longitude
-                            +"\n不再在範圍內", Toast.LENGTH_LONG).show();
+                            +"\n不再在範圍內", Toast.LENGTH_LONG).show();*/
                 }
             }
 
@@ -225,10 +327,20 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
         DrawLine();//畫出路線(之後要改成定時偵測是否有新路徑，然後更新)
     }
+
     public void onDestroy(){
-        handler.removeCallbacks(renew_path_data_timer);
-        Toast.makeText(this, "Service stop1", Toast.LENGTH_SHORT).show();
         super.onDestroy();
+    }
+    //按上一頁先關閉Timer
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // TODO Auto-generated method stub
+        if (keyCode == android.view.KeyEvent.KEYCODE_BACK) { // 攔截返回鍵
+            doAsynchronousTask.cancel();
+            Toast t = Toast.makeText(MapsActivity.this,"!!!!",Toast.LENGTH_LONG);
+            finish();
+        }
+        return super.onKeyDown(keyCode, event);
     }
     //actionbar menu
     @Override
@@ -290,7 +402,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     }
     public void DrawLine() {
         //畫出路徑
-        int current_ID = MainActivity.machineID;
+        int current_ID = GlobalVariable.machineID;
         int min_distance = 9999999;
         for(int i = 0 ; i < GeoPoint.size() ; ){
             PolylineOptions polylineOpt = new PolylineOptions();//要畫出的線段
@@ -336,7 +448,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             mMap.addPolyline(polylineOpt);
 
             //tts
-            mTts.speak("最近的救護車距離您"+min_distance+"公尺", TextToSpeech.QUEUE_FLUSH, null,null);
+            //mTts.speak("最近的救護車距離您"+min_distance+"公尺", TextToSpeech.QUEUE_FLUSH, null,null);
 
         }
     }
@@ -344,14 +456,17 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     @Override
     public void onLocationChanged(Location location) {
         // 取得座標值:緯度,經度
-        LatLng cur_location = new LatLng(location.getLatitude(), location.getLongitude());
-        //移掉前一個mark，重新定位
-        if(!first_flag){
-            nowLocation_marker.remove();
-        }
-        first_flag = false;
-        nowLocation_marker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).position(cur_location).title("目前位置"));
-        nowLocation_marker.setDraggable(true);
+        //GPS更新，DEEMO因素先註解掉，可以再setting做個開關開啟功能
+        /*
+                LatLng cur_location = new LatLng(location.getLatitude(), location.getLongitude());
+                //移掉前一個mark，重新定位
+                if(!first_flag){
+                    nowLocation_marker.remove();
+                }
+                first_flag = false;
+                nowLocation_marker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).position(cur_location).title("目前位置"));
+                nowLocation_marker.setDraggable(true);
+                */
     }
     protected void onResume() {
         super.onResume();
@@ -370,20 +485,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             Toast.makeText(this, "請開啟定位服務", Toast.LENGTH_LONG).show();
         }
     }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (permissions.length == 1 &&
-                permissions[0] == android.Manifest.permission.ACCESS_FINE_LOCATION &&
-                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return;
-            }
-            //為了demo 1秒更新一次位置
-            locMgr.requestLocationUpdates(bestProv, 1000, 1, this);
-        } else {
-            // Permission was denied. Display an error message.
-        }
-    }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -454,13 +556,158 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         }
     };
     public void callAsynchronousTask() {
-        Timer timer = new Timer();
-        TimerTask doAsynchronousTask = new TimerTask() {
+        timer = new Timer();
+        doAsynchronousTask = new TimerTask() {
             @Override
             public void run() {
                 handler.post(renew_path_data_timer);
             }
         };
         timer.schedule(doAsynchronousTask, 0, 10000); //execute in every ___ ms
+
+    }
+
+    public static String get_Direction(int a,int b ){
+        //a 表示前後  b 表示左右
+        StringBuilder string = new StringBuilder();
+        if (b == 1)
+            string.append("右");
+        else if (b == -1)
+            string.append("左");
+
+        if (a == 1)
+            string.append("前");
+        else if (a == -1)
+            string.append("後");
+
+        string.append("方");
+        return string.toString();
+    }
+    //透過web更新client的位置
+    public static void  chgDriverPosFromWeb(String webSocket_input_chgDriverPos){
+        //Ex:(120.123,23.123)
+        String Lat = webSocket_input_chgDriverPos.split("\\(")[1].split(",")[0];
+        String Lng = webSocket_input_chgDriverPos.split(",")[1].split("\\)")[0];
+        LatLng temp = new LatLng(Double.parseDouble(Lat),Double.parseDouble(Lng));
+        Log.d("myTag",temp.latitude + " " + temp.longitude);
+        //計算向量(判斷方向)
+        if (!temp.equals(test_loaction)){ //位置有更新過
+            LatLng last_loc = test_loaction;//取得前一個位置  在test_location
+            //計算向量
+            Car_direction [0] = temp.latitude-last_loc.latitude;
+            Car_direction [1] = temp.longitude-last_loc.longitude;
+        }
+        test_loaction = temp; //更新位置
+
+        //如果不是第一次定位就移掉前一個mark，重新定位
+        if(!first_flag){
+            nowLocation_marker.remove();
+        }
+        first_flag = false;
+        nowLocation_marker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).position(test_loaction).title("目前位置"));
+        nowLocation_marker.setDraggable(true);
+
+        //判斷距離
+        int min_distance = 9999999;
+        int current_ID = 1;
+        //[0][0]救護車相對駕駛第一點前後方 [0][1]救護車相對駕駛第一點左右方
+        // [1][0]救護車相對駕駛第二點前後方 [1][1]救護車相對駕駛第二點左右方
+        int site[][] = {{2,2},{2,2}};
+
+        for(int i = 0 ; i < GeoPoint.size() ; ) {
+            boolean first_Point_flag = true;
+            while (GeoPoint.get(i).id == current_ID) {//一條一條路徑畫
+                //第一個點的mark
+                if (first_Point_flag == true) {
+                    StartPoint = new LatLng(GeoPoint.get(i).Lat, GeoPoint.get(i).Lng);
+                    first_Point_flag = false;
+                    int temp_distance = (int) D_jw(StartPoint.latitude, StartPoint.longitude, test_loaction.latitude, test_loaction.longitude);
+
+                    if (temp_distance < min_distance) {
+                        min_distance = temp_distance;
+                        //Ambulance Site to Car now
+                        double between_Lat = GeoPoint.get(i).Lat - test_loaction.latitude;
+                        double between_Lng = GeoPoint.get(i).Lng - test_loaction.longitude;
+
+                        //第一點前後方判斷  用內積公式
+                        double dot = between_Lat * Car_direction[0] + between_Lng * Car_direction[1];
+                        double Car_direction_L = Math.sqrt(Math.pow(Car_direction[0], 2) + Math.pow(Car_direction[1], 2));
+                        double between_direction_L = Math.sqrt(Math.pow(between_Lat, 2) + Math.pow(between_Lng, 2));
+                        double theta = Math.toDegrees(Math.acos(dot / (Car_direction_L * between_direction_L)));
+                        //Toast.makeText(MapsActivity.this," "+ theta, Toast.LENGTH_LONG).show();
+                        if (theta < 67.5)
+                            site[0][0] = 1;//前方
+                        else if (theta > 112.5)
+                            site[0][0] = -1;//後方
+                        else
+                            site[0][0] = 0;//無關前後  只關左右
+
+                        //第一點左右方判斷  用外積公式及右手定則
+                        double Cross_direction = between_Lng * Car_direction[0] - Car_direction[1] * between_Lat;
+                        if (Cross_direction > 0 && (theta <= 157.5 && theta >= 22.5))
+                            site[0][1] = 1;//左方
+                        else if (Cross_direction < 0 && (theta <= 157.5 && theta >= 22.5))
+                            site[0][1] = -1;//右方
+                        else
+                            site[0][1] = 0;//無關左右  只關前後
+
+
+                        //第二點前後方判斷  用內積公式
+                        between_Lat = GeoPoint.get(i + 1).Lat - test_loaction.latitude;
+                        between_Lng = GeoPoint.get(i + 1).Lng - test_loaction.longitude;
+                        dot = between_Lat * Car_direction[0] + between_Lng * Car_direction[1];
+                        Car_direction_L = Math.sqrt(Math.pow(Car_direction[0], 2) + Math.pow(Car_direction[1], 2));
+                        between_direction_L = Math.sqrt(Math.pow(between_Lat, 2) + Math.pow(between_Lng, 2));
+                        theta = Math.toDegrees(Math.acos(dot / (Car_direction_L * between_direction_L)));
+                        if (theta < 67.5)
+                            site[1][0] = 1;//前方
+                        else if (theta > 112.5)
+                            site[1][0] = -1;//後方
+                        else
+                            site[1][0] = 0;//無關前後  只關左右
+
+                        //第二點左右方判斷  用外積公式及右手定則
+                        Cross_direction = between_Lng * Car_direction[0] - Car_direction[1] * between_Lat;
+                        if (Cross_direction > 0 && (theta <= 157.5 && theta >= 22.5))
+                            site[1][1] = 1;//左方
+                        else if (Cross_direction < 0 && (theta <= 157.5 && theta >= 22.5))
+                            site[1][1] = -1;//右方
+                        else
+                            site[1][1] = 0;//無關左右  只關前後
+                    }
+
+                }
+                else {
+                    LatLng now_pos = new LatLng(GeoPoint.get(i).Lat, GeoPoint.get(i).Lng);
+                }
+                i++;//下一個點
+                if (i == GeoPoint.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
+                    break;
+                }
+            }
+            current_ID++;//下一條路徑
+        }
+
+        //Toast.makeText(MapsActivity.this, "第一點" +site[0][0] +" "+ site[0][1] +"\n第二點" +site[1][0] +" "+ site[1][1] , Toast.LENGTH_LONG).show();
+
+
+        //tts
+        if(min_distance == 9999999){
+            //什麼都不做
+        }
+        else if ((site[0][0] == 0 && site[0][1] == 0) || (site[0][0] == 0 && site[0][1] == 0)){
+            //Toast.makeText(MapsActivity.this, "[測試模式]有方向有問題", Toast.LENGTH_LONG).show();
+        }
+        //else if
+        else {
+            String First_direction = get_Direction(site[0][0],site[0][1]);
+            String Second_direction = get_Direction(site[1][0],site[1][1]);
+            if (First_direction.equals(Second_direction))
+                mTts.speak("最近的救護車距離您"+min_distance+"公尺並且從您的"+First_direction+"向您靠近", TextToSpeech.QUEUE_FLUSH, null,null);
+            else if ((site[0][0] + site[1][0] == 0) && (site[0][1] + site[1][1] == 0))
+                mTts.speak("最近的救護車距離您"+min_distance+"公尺並且從您的"+First_direction+"向您靠近", TextToSpeech.QUEUE_FLUSH, null,null);
+            else
+                mTts.speak("最近的救護車距離您"+min_distance+"公尺並且從您的"+First_direction+"向您的"+Second_direction+"行駛", TextToSpeech.QUEUE_FLUSH, null,null);
+        }
     }
 }

@@ -9,10 +9,12 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ToggleButton;
 
 public class SettingActivity extends AppCompatActivity {
     private EditText EditText00,EditText01,EditText02,EditText03,EditText04,EditText05;
     private Button SettingBtn,RecoverBtn;
+    private ToggleButton simulateGPSBtn;
     SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,8 +33,10 @@ public class SettingActivity extends AppCompatActivity {
         EditText05 = (EditText) findViewById(R.id.editText05);
         SettingBtn = (Button) findViewById(R.id.button4);
         RecoverBtn = (Button) findViewById(R.id.button5);
+        simulateGPSBtn = (ToggleButton)findViewById(R.id.toggleButton);
         SettingBtn.setOnClickListener(Setting);
         RecoverBtn.setOnClickListener(Recover);
+        simulateGPSBtn.setOnClickListener(GPS);
         //設置edit text中的value
         sharedPreferences = getSharedPreferences("Data" , MODE_PRIVATE);
         EditText00.setText(sharedPreferences.getString("hintText","Not Value"));
@@ -41,6 +45,14 @@ public class SettingActivity extends AppCompatActivity {
         EditText03.setText(String.valueOf(sharedPreferences.getFloat("tolerance",10.0f)));
         EditText04.setText(sharedPreferences.getString("IP","192.168.1.143"));
         EditText05.setText(String.valueOf(sharedPreferences.getInt("port",8080)));
+
+        if(!GlobalVariable.is_simulateGPS){
+            simulateGPSBtn.setChecked(false);
+        }
+        else{
+            simulateGPSBtn.setChecked(true);
+        }
+
     }
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -77,6 +89,7 @@ public class SettingActivity extends AppCompatActivity {
             SettingActivity.this.finish();
         }
     };
+
     private Button.OnClickListener Recover = new Button.OnClickListener(){
         public void onClick(View v){
             //儲存
@@ -98,5 +111,14 @@ public class SettingActivity extends AppCompatActivity {
             SettingActivity.this.finish();
         }
     };
-
+    private Button.OnClickListener GPS = new Button.OnClickListener(){
+        public void onClick(View v){
+            if (simulateGPSBtn.isChecked()) {
+                GlobalVariable.is_simulateGPS = true;
+            }
+            else{
+                GlobalVariable.is_simulateGPS = false;
+            }
+        }
+    };
 }

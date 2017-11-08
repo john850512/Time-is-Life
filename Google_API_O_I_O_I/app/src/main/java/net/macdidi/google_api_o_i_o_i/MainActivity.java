@@ -5,11 +5,14 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -27,6 +30,7 @@ import android.widget.Toast;
 import java.util.Locale;
 
 import static net.macdidi.google_api_o_i_o_i.R.id.imageView;
+import static net.macdidi.google_api_o_i_o_i.Servicetest.closeConnectMsg;
 
 public class MainActivity extends AppCompatActivity  {
     private Button redbutton,greenbutton;
@@ -35,7 +39,6 @@ public class MainActivity extends AppCompatActivity  {
     private ImageView smallred;
     private ImageView smallgreen;
 
-    public static int machineID = 1;
     public static String hintText;
     public static String hintContentTitle;
     public static String hintContentText;
@@ -94,6 +97,13 @@ public class MainActivity extends AppCompatActivity  {
                 }
             }
         });
+        //定位權限請求，先做之後就不用做了
+        //定位
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+        } else {
+            ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        }
     }
 
     //actionbar menu
@@ -153,7 +163,7 @@ public class MainActivity extends AppCompatActivity  {
         sharedPreferences.edit().putFloat("tolerance", 10.0f).apply();
         sharedPreferences.edit().putString("IP", "192.168.1.143").apply();
         sharedPreferences.edit().putInt("port", 8080).apply();
-        sharedPreferences.edit().putInt("machineID", 1).apply();
+        sharedPreferences.edit().putInt("machineID", GlobalVariable.machineID).apply();
         Toast.makeText(MainActivity.this,"紀錄檔設定完成",Toast.LENGTH_SHORT).show();
     }
     private int readReacord(){
@@ -167,7 +177,7 @@ public class MainActivity extends AppCompatActivity  {
         hintContentText = sharedPreferences.getString("hintContentText","hintContentText");
         IP = sharedPreferences.getString("IP","192.168.1.143");
         port = sharedPreferences.getInt("port",8080);
-        sharedPreferences.edit().putInt("machineID", 1).apply();
+        sharedPreferences.edit().putInt("machineID", GlobalVariable.machineID).apply();
         return fir_write;
     }
     private Button.OnClickListener About = new Button.OnClickListener(){
@@ -210,12 +220,11 @@ public class MainActivity extends AppCompatActivity  {
                 smallgreen.setVisibility(View.VISIBLE);
                 switch1.setText("結束行駛");
                 greenbutton.setText("系統正常執行中");
-                animateButton_green();//開啟動畫
 
-                // 開啟service
-                startService(new Intent(MainActivity.this, Servicetest.class));
-                //開啟通知欄顯示
-                notifyMsg();
+                animateButton_green();//開啟動畫
+                startService(new Intent(MainActivity.this, Servicetest.class));// 開啟service
+                notifyMsg();//開啟通知欄顯示
+                moveTaskToBack(true);//返回手機主頁面
             }
             else {
                 //Toast.makeText(MainActivity.this,"NO",Toast.LENGTH_SHORT).show();
@@ -229,6 +238,8 @@ public class MainActivity extends AppCompatActivity  {
                 redbutton.setVisibility(View.GONE);
                 switch1.setText("開始行駛");
                 greenbutton.setText("系統尚未執行");
+                //發送關閉連線的訊息
+                closeConnectMsg();
                 //關閉service
                 stopService(new Intent(MainActivity.this, Servicetest.class));
             }
@@ -242,7 +253,8 @@ public class MainActivity extends AppCompatActivity  {
         //步驟2 : 按下通知之後要執行的activity
         Intent notifyIntent = new Intent(MainActivity.this , MainActivity.class);
         //notifyIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        notifyIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        //notifyIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        notifyIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent appIntent = PendingIntent.getActivity(MainActivity.this,0,notifyIntent,0);
 
         //步驟3 : 建構notification
@@ -295,6 +307,8 @@ public class MainActivity extends AppCompatActivity  {
 
         //取消以前顯示的所有通知.
         //              mNotificationManager.cancelAll();
+
+
     }
 
 
@@ -350,5 +364,18 @@ public class MainActivity extends AppCompatActivity  {
                 else if(cur_stat == 0)  animateButton_red();
             }
         });
+    }
+    //權限請求的結果
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (permissions.length == 1 &&
+                permissions[0] == android.Manifest.permission.ACCESS_FINE_LOCATION &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+        } else {
+            Toast.makeText(MainActivity.this, "請開啟權限再使用本系統", Toast.LENGTH_LONG).show();
+        }
     }
 }

@@ -18,16 +18,6 @@
         android:inputType="textPersonName"
         android:text="Name"
         android:ems="8"
-        android:id="@+id/editText03"
-        android:layout_alignBaseline="@+id/textView03"
-        android:layout_alignBottom="@+id/textView03"
-        android:layout_alignParentEnd="true" />
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:text="Name"
-        android:ems="8"
         android:layout_alignParentTop="true"
         android:layout_alignStart="@+id/editText01"
         android:layout_marginTop="27dp"
@@ -130,22 +120,51 @@
         android:layout_alignStart="@+id/editText04"
         android:layout_marginTop="12dp"
         android:id="@+id/editText05" />
+
     <Button
         android:text="回復預設值"
         android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:id="@+id/button5"
-        android:layout_below="@+id/button4"
-        android:layout_alignStart="@+id/button4" />
+        android:layout_alignParentBottom="true"
+        android:layout_toEndOf="@+id/textView4" />
 
     <Button
         android:text="儲存設定"
         android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:id="@+id/button4"
-        android:layout_below="@+id/editText05"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp" />
+        android:layout_above="@+id/button5"
+        android:layout_alignStart="@+id/button5" />
+
+    <ToggleButton
+        android:text="ToggleButton"
+        android:id="@+id/toggleButton"
+        android:layout_width="70dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/editText00"
+        android:layout_height="35dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:text="Name"
+        android:ems="8"
+        android:id="@+id/editText03"
+        android:layout_alignBaseline="@+id/textView03"
+        android:layout_alignBottom="@+id/textView03"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:text="模擬GPS模式"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView7"
+        android:ems="10"
+        android:layout_alignBaseline="@+id/toggleButton"
+        android:layout_alignBottom="@+id/toggleButton"
+        android:layout_alignStart="@+id/textView00" />
 
 
 </RelativeLayout>
