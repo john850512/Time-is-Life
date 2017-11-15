@@ -19,6 +19,7 @@ public class HelloWorldServlet {
 	public static Session webSession;
 	public static Session driverSession;
 	Map<Set<String>, Session> allSession = new HashMap<Set<String>, Session>();
+	
     @OnMessage
     public void onMessage(String message, Session session) throws Exception {
     	//System.out.println(message);
@@ -43,6 +44,22 @@ public class HelloWorldServlet {
     		allSession.get(webSessionID).getBasicRemote().sendText(message);
     		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + allPath.toString());
     		System.out.println("[server]SendToWeb(SessionID:"+webSession.getId()+"):" + allPath.toString());
+    	}
+    	else if(message.split("]")[1].startsWith("delete navigation")){ //來自client的刪除導航路徑
+    		int deleteID = Integer.parseInt(message.split(":")[1].split("]")[0]);
+    		//
+    		String temp = allPath.toString();
+    		allPath.setLength(0);
+    		String[] pathTemp = temp.split("\\$");
+    		System.out.println(pathTemp.length);
+    		for(int i = 1 ; i < pathTemp.length ; i+=2){
+    			System.out.println("**"+pathTemp[i]);
+    			if(Integer.parseInt(pathTemp[i]) != deleteID)
+    				allPath.append("$"+pathTemp[i]+"$"+pathTemp[i+1]);
+    		}
+    		//System.out.println("*"+allPath);
+
+    		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + message);
     	}
     	else if(message.split("]")[1].startsWith("request allpath")){ //來自client的請求導航路徑
     		//session.getBasicRemote().sendText("This is the first server message"); 
