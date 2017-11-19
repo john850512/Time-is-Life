@@ -145,7 +145,8 @@
 		//google map api for initial map 
 		var markerArray,directionsService,map,directionsDisplay,stepDisplay;
 		//websocket
-		var webSocket = new WebSocket('ws://192.168.1.143:8080/WebSocket/websocket');
+		//var webSocket = new WebSocket('ws://192.168.1.143:8080/WebSocket/websocket');
+		var webSocket = new WebSocket('ws://192.168.0.106:8080/WebSocket/websocket');
 		//navigation request
 		var navID = 1;
 		var originPos = "高雄大學";
@@ -304,7 +305,7 @@
 			markerArray, stepDisplay, map) {
 		  // First, remove any existing markers from the map.
 		  for (var i = 0; i < markerArray.length; i++) {
-			if(i % 2 == 0)continue;//更改同時也要改showSteps裡的marker設定
+			//if(i % 2 == 0)continue;//更改同時也要改showSteps裡的marker設定
 			markerArray[i].setMap(null);
 		  }
 		
@@ -369,7 +370,7 @@
 			var i = 0;//跑loop
 			document.getElementById('warnings-panel').innerHTML +="===============救護車"+navID+"行駛路徑===============</br>";
 			for (i = 0; i < directionResult.routes[0].overview_path.length  ; i++) {
-				if(i % 2 == 0 && i != 0)continue;//更改同時也要改calculateAndDisplayRoute裡面的初始化
+				//if(i % 2 == 0 && i != 0)continue;//更改同時也要改calculateAndDisplayRoute裡面的初始化
 				var marker = markerArray[i] = markerArray[i] || new google.maps.Marker;
 				if(i == 0){
 					marker.setIcon("https://i.imgur.com/CS6t8EC.png");

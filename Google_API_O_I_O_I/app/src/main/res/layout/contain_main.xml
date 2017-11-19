@@ -1,23 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:id="@+id/LinearLayout1"
-    android:background="@drawable/bg">
-    <fragment
+    tools:context="net.macdidi.google_api_o_i_o_i.MainActivity"
+    android:background="@drawable/bg1">
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/map"
-        tools:context=".MapsActivity"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="50dp"
-        android:layout_marginBottom="100dp" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <EditText
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:text="Lat"
+            android:ems="10"
+            android:layout_marginLeft="30dp"
+            android:id="@+id/testLatInput"
+            android:layout_width="150dp" />
+        <EditText
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:text="Lng"
+            android:ems="10"
+            android:id="@+id/testLngInput" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="13dp"
+        android:layout_marginRight="13dp"
+        android:layout_marginTop="10dp">
+        <fragment
+            android:layout_width="360dp"
+            android:layout_height="400dp"
+            android:id="@+id/map"
+            tools:context=".MapsActivity"
+            android:name="com.google.android.gms.maps.SupportMapFragment" />
+    </LinearLayout>
+
     <Button android:text = "顯示"
         android:id="@+id/btn"
         android:layout_width="match_parent"
@@ -25,28 +52,5 @@
         android:layout_alignParentBottom="true"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:layout_marginBottom="40dp"
         />
-
-    <EditText
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:text="Lat"
-        android:ems="10"
-        android:layout_alignParentTop="true"
-        android:layout_alignStart="@+id/map"
-        android:layout_marginStart="17dp"
-        android:id="@+id/testLatInput"
-        android:layout_width="150dp" />
-
-    <EditText
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:text="Lng"
-        android:ems="10"
-        android:id="@+id/testLngInput"
-        android:layout_alignParentTop="true"
-        android:layout_alignEnd="@+id/map" />
-
-</RelativeLayout>
+</LinearLayout>

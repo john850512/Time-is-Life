@@ -15,7 +15,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,22 +28,20 @@ import android.widget.Toast;
 
 import java.util.Locale;
 
+import static net.macdidi.google_api_o_i_o_i.GlobalVariable.hintContentText;
+import static net.macdidi.google_api_o_i_o_i.GlobalVariable.hintContentTitle;
+import static net.macdidi.google_api_o_i_o_i.GlobalVariable.hintText;
 import static net.macdidi.google_api_o_i_o_i.R.id.imageView;
 import static net.macdidi.google_api_o_i_o_i.Servicetest.closeConnectMsg;
 
 public class MainActivity extends AppCompatActivity  {
-    private Button redbutton,greenbutton;
-    private Button aboutBtn;
+    private static Button redbutton,greenbutton;
     private Switch switch1;
     private ImageView smallred;
     private ImageView smallgreen;
 
-    public static String hintText;
-    public static String hintContentTitle;
-    public static String hintContentText;
-    public static String IP;
-    public static int port;
-    private int cur_stat;//當前狀態對應的圓形按鈕顏色，-1代表未啟動，0代表正常(GREEN)，1代表有救護車經過(RED)
+
+
     long[] vibrate = {0,100,200,300};   //震動時間長度參數
 
     //Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION); //音樂Uri參數
@@ -52,8 +49,9 @@ public class MainActivity extends AppCompatActivity  {
     // uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.ring);
 
     //tts
-    private TextToSpeech mTts;
+    private static TextToSpeech mTts;
     private static final int REQ_TTS_STATUS_CHECK = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,9 +75,7 @@ public class MainActivity extends AppCompatActivity  {
         smallgreen = (ImageView) findViewById(R.id.imageView2);
         switch1 = (Switch)findViewById(R.id.switch1);
         switch1.setOnClickListener(switch_colorChange);
-        aboutBtn = (Button)findViewById(R.id.About_us);
-        aboutBtn.setOnClickListener(About);
-        cur_stat = -1;//當前狀態
+        GlobalVariable.cur_stat = -1;//當前狀態
 
         //tts
         Intent checkIntent = new Intent();
@@ -89,7 +85,8 @@ public class MainActivity extends AppCompatActivity  {
             public void onInit(int status) {
                 if (status == TextToSpeech.SUCCESS) {
                     int result = mTts.setLanguage(Locale.CHINA);
-                    mTts.speak("歡迎使用道路避讓即時警示系統，請點擊開始行駛按鈕開啟功能", TextToSpeech.QUEUE_FLUSH, null,null);
+                    mTts.setSpeechRate(GlobalVariable.speakRate);
+                    mTts.speak("歡迎使用道路避讓即時警示系統，請點擊按鈕開啟功能", TextToSpeech.QUEUE_FLUSH, null,null);
                     if (result == TextToSpeech.LANG_MISSING_DATA
                             || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                         Toast.makeText(MainActivity.this, "語音系統發生錯誤", Toast.LENGTH_LONG).show();
@@ -104,8 +101,8 @@ public class MainActivity extends AppCompatActivity  {
         } else {
             ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
-    }
 
+    }
     //actionbar menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -126,41 +123,13 @@ public class MainActivity extends AppCompatActivity  {
         }
         return true;
     }
-    //tts
-    private final TextToSpeech.OnInitListener mInitListener = new TextToSpeech.OnInitListener() {
-        @Override
-        public void onInit(int status) {
-            // status can be either TextToSpeech.SUCCESS or TextToSpeech.ERROR.
-            if (status == TextToSpeech.SUCCESS) {
-                // Set preferred language to US english.
-                // Note that a language may not be available, and the result will indicate this.
-                int result = mTts.setLanguage(Locale.CHINESE);
-                // Try this someday for some interesting results.
-                // int result mTts.setLanguage(Locale.FRANCE);
-                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    // Lanuage data is missing or the language is not supported.
-                    Log.e("TAG", "Language is not available.");
-                } else {
-                    // Check the documentation for other possible result codes.
-                    // For example, the language may be available for the locale,
-                    // but not for the specified country and variant.
-
-                    // The TTS engine has been successfully initialized.
-                    // Allow the user to press the button for the app to speak again.
-                }
-            } else {
-                // Initialization failed.
-                Log.e("TAG", "Could not initialize TextToSpeech.");
-            }
-        }
-    };
     private void firRecord(){
         SharedPreferences sharedPreferences = getSharedPreferences("Data" , MODE_PRIVATE);
         sharedPreferences.edit().putInt("fir_write", 1).apply();
         sharedPreferences.edit().putString("hintText", "訊息提示視窗").apply();
         sharedPreferences.edit().putString("hintContentTitle", "Time is Life").apply();
         sharedPreferences.edit().putString("hintContentText", "您有提示訊息請查看").apply();
-        sharedPreferences.edit().putFloat("tolerance", 10.0f).apply();
+        sharedPreferences.edit().putFloat("tolerance", 500.0f).apply();
         sharedPreferences.edit().putString("IP", "192.168.1.143").apply();
         sharedPreferences.edit().putInt("port", 8080).apply();
         sharedPreferences.edit().putInt("machineID", GlobalVariable.machineID).apply();
@@ -172,40 +141,32 @@ public class MainActivity extends AppCompatActivity  {
         int fir_write = 0;
         fir_write = sharedPreferences.getInt("fir_write",0);
         //Toast.makeText(MainActivity.this,String.valueOf(fir_write),Toast.LENGTH_SHORT).show();
-        hintText = sharedPreferences.getString("hintText","訊息提示視窗");
-        hintContentTitle = sharedPreferences.getString("hintContentTitle","Time is Life");
-        hintContentText = sharedPreferences.getString("hintContentText","hintContentText");
-        IP = sharedPreferences.getString("IP","192.168.1.143");
-        port = sharedPreferences.getInt("port",8080);
+        GlobalVariable.hintText = sharedPreferences.getString("hintText","訊息提示視窗");
+        GlobalVariable.hintContentTitle = sharedPreferences.getString("hintContentTitle","Time is Life");
+        GlobalVariable.hintContentText = sharedPreferences.getString("hintContentText","hintContentText");
+        GlobalVariable.IP = sharedPreferences.getString("IP","192.168.1.143");
+        GlobalVariable.port = sharedPreferences.getInt("port",8080);
         sharedPreferences.edit().putInt("machineID", GlobalVariable.machineID).apply();
         return fir_write;
     }
-    private Button.OnClickListener About = new Button.OnClickListener(){
-        @Override
-        public void onClick(View v) {
-            if(cur_stat == 0) {
-                //正常狀態
-                cur_stat = 1;
-                greenbutton.setVisibility(View.VISIBLE);
-                redbutton.setVisibility(View.GONE);
-            }
-            else if(cur_stat == 1){
-                //警示狀態
-                cur_stat = 0;
-                greenbutton.setVisibility(View.GONE);
-                redbutton.setVisibility(View.VISIBLE);
-                mTts.speak("即將有救護車經過，請點擊紅色按鈕查看，並盡速進行避讓", TextToSpeech.QUEUE_FLUSH, null,null);
-            }
+    public static void change_cur_state(){
+        if(GlobalVariable.cur_stat == 0) {
+            //正常狀態
+            greenbutton.setVisibility(View.VISIBLE);
+            redbutton.setVisibility(View.GONE);
         }
-    };
-
+        else if(GlobalVariable.cur_stat == 1){
+            //警示狀態
+            greenbutton.setVisibility(View.GONE);
+            redbutton.setVisibility(View.VISIBLE);
+            mTts.speak("請點擊紅色按鈕查看位置，並盡速進行避讓", TextToSpeech.QUEUE_FLUSH, null,null);
+        }
+    }
     private Button.OnClickListener openMapActivity = new Button.OnClickListener(){
         @Override
         public void onClick(View v) {
             //開啟地圖
-            Intent Maps = new Intent();
-            Maps.setClass(MainActivity.this,MapsActivity.class);
-            startActivity(Maps);
+
         }
     };
     private Button.OnClickListener switch_colorChange = new Button.OnClickListener(){
@@ -215,28 +176,28 @@ public class MainActivity extends AppCompatActivity  {
                 //Toast.makeText(MainActivity.this,"YES",Toast.LENGTH_SHORT).show();
                 // int id = getResources().getIdentifier("@drawable/" + "smallgreenbutton.png", null, getPackageName());
                 //red_green_switch.setImageResource(id);
-                cur_stat = 1;
+                GlobalVariable.cur_stat = 0;
                 smallred.setVisibility(View.GONE);
                 smallgreen.setVisibility(View.VISIBLE);
-                switch1.setText("結束行駛");
+                //switch1.setText("結束行駛");
                 greenbutton.setText("系統正常執行中");
 
                 animateButton_green();//開啟動畫
                 startService(new Intent(MainActivity.this, Servicetest.class));// 開啟service
                 notifyMsg();//開啟通知欄顯示
-                moveTaskToBack(true);//返回手機主頁面
+                //moveTaskToBack(true);//返回手機主頁面
             }
             else {
                 //Toast.makeText(MainActivity.this,"NO",Toast.LENGTH_SHORT).show();
                 //int id = getResources().getIdentifier("@drawable/" + "smallredbutton.png", null, getPackageName());
                 //red_green_switch.setImageResource(id);
 
-                cur_stat = -1;
+                GlobalVariable.cur_stat = -1;
                 smallred.setVisibility(View.VISIBLE);
                 smallgreen.setVisibility(View.GONE);
                 greenbutton.setVisibility(View.VISIBLE);
                 redbutton.setVisibility(View.GONE);
-                switch1.setText("開始行駛");
+                //switch1.setText("開始行駛");
                 greenbutton.setText("系統尚未執行");
                 //發送關閉連線的訊息
                 closeConnectMsg();
@@ -334,8 +295,8 @@ public class MainActivity extends AppCompatActivity  {
             public void onAnimationRepeat(Animation arg0) {}
             @Override
             public void onAnimationEnd(Animation arg0) {
-                if(cur_stat == 0) animateButton_red();
-                else if(cur_stat == 1) animateButton_green();
+                if(GlobalVariable.cur_stat == 1) animateButton_red();
+                else if(GlobalVariable.cur_stat == 0) animateButton_green();
             }
         });
     }
@@ -360,8 +321,8 @@ public class MainActivity extends AppCompatActivity  {
             public void onAnimationRepeat(Animation arg0) {}
             @Override
             public void onAnimationEnd(Animation arg0) {
-                if(cur_stat == 1) animateButton_green();
-                else if(cur_stat == 0)  animateButton_red();
+                if(GlobalVariable.cur_stat == 0) animateButton_green();
+                else if(GlobalVariable.cur_stat == 1)  animateButton_red();
             }
         });
     }

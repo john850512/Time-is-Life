@@ -58,12 +58,12 @@ public class SettingActivity extends AppCompatActivity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         // TODO Auto-generated method stub
         if (keyCode == KeyEvent.KEYCODE_BACK) { // 攔截返回鍵
-            MainActivity.hintText = sharedPreferences.getString("hintText","Not Value");
-            MainActivity.hintContentTitle = sharedPreferences.getString("hintContentTitle","Not Value");
-            MainActivity.hintContentText = sharedPreferences.getString("hintContentText","Not Value");
-            MainActivity.IP = sharedPreferences.getString("IP","192.168.1.143");
-            MainActivity.port = sharedPreferences.getInt("port",8080);
-            MapsActivity.tolerance = sharedPreferences.getFloat("tolerance",10.0f);
+            GlobalVariable.hintText = sharedPreferences.getString("hintText","Not Value");
+            GlobalVariable.hintContentTitle = sharedPreferences.getString("hintContentTitle","Not Value");
+            GlobalVariable.hintContentText = sharedPreferences.getString("hintContentText","Not Value");
+            GlobalVariable.IP = sharedPreferences.getString("IP","192.168.1.143");
+            GlobalVariable.port = sharedPreferences.getInt("port",8080);
+            GlobalVariable.tolerance = sharedPreferences.getFloat("tolerance",500.0f);
             finish();
         }
         return true;
@@ -78,12 +78,12 @@ public class SettingActivity extends AppCompatActivity {
             sharedPreferences.edit().putString("IP",EditText04.getText().toString()).apply();
             sharedPreferences.edit().putInt("port", Integer.parseInt(EditText05.getText().toString())).apply();
             //設定
-            MainActivity.hintText = sharedPreferences.getString("hintText","Not Value");
-            MainActivity.hintContentTitle = sharedPreferences.getString("hintContentTitle","Not Value");
-            MainActivity.hintContentText = sharedPreferences.getString("hintContentText","Not Value");
-            MainActivity.IP = sharedPreferences.getString("IP","192.168.1.143");
-            MainActivity.port = sharedPreferences.getInt("port",8080);
-            MapsActivity.tolerance = sharedPreferences.getFloat("tolerance",10.0f);
+            GlobalVariable.hintText = sharedPreferences.getString("hintText","Not Value");
+            GlobalVariable.hintContentTitle = sharedPreferences.getString("hintContentTitle","Not Value");
+            GlobalVariable.hintContentText = sharedPreferences.getString("hintContentText","Not Value");
+            GlobalVariable.IP = sharedPreferences.getString("IP","192.168.1.143");
+            GlobalVariable.port = sharedPreferences.getInt("port",8080);
+            GlobalVariable.tolerance = sharedPreferences.getFloat("tolerance",10.0f);
             Intent Main = new Intent();
             Main.setClass(SettingActivity.this,MainActivity.class);
             SettingActivity.this.finish();
@@ -100,12 +100,12 @@ public class SettingActivity extends AppCompatActivity {
             sharedPreferences.edit().putString("IP", "192.168.1.143").apply();
             sharedPreferences.edit().putInt("port", 8080).apply();
             //設定
-            MainActivity.hintText = sharedPreferences.getString("hintText","Not Value");
-            MainActivity.hintContentTitle = sharedPreferences.getString("hintContentTitle","Not Value");
-            MainActivity.hintContentText = sharedPreferences.getString("hintContentText","Not Value");
-            MainActivity.IP = sharedPreferences.getString("IP","192.168.1.143");
-            MainActivity.port = sharedPreferences.getInt("port",8080);
-            MapsActivity.tolerance = sharedPreferences.getFloat("tolerance",10.0f);
+            GlobalVariable.hintText = sharedPreferences.getString("hintText","Not Value");
+            GlobalVariable.hintContentTitle = sharedPreferences.getString("hintContentTitle","Not Value");
+            GlobalVariable.hintContentText = sharedPreferences.getString("hintContentText","Not Value");
+            GlobalVariable.IP = sharedPreferences.getString("IP","192.168.1.143");
+            GlobalVariable.port = sharedPreferences.getInt("port",8080);
+            GlobalVariable.tolerance = sharedPreferences.getFloat("tolerance",10.0f);
             Intent Main = new Intent();
             Main.setClass(SettingActivity.this,MainActivity.class);
             SettingActivity.this.finish();

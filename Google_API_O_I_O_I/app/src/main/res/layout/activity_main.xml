@@ -1,124 +1,150 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context="net.macdidi.google_api_o_i_o_i.MainActivity"
-    android:background="@drawable/bg">
-
-    <Button
-        android:text="關於我們"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/login_button_selector"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:id="@+id/About_us"
-        android:layout_marginBottom="18dp"/>
-
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:srcCompat="@drawable/mr_ic_close_dark"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginTop="30dp"
-        android:layout_marginLeft="170dp"
-        android:id="@+id/hidden" />
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:srcCompat="@drawable/smallgreenbutton"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginTop="30dp"
-        android:layout_marginLeft="170dp"
-        android:id="@+id/imageView2" />
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:srcCompat="@drawable/smallredbutton"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginTop="30dp"
-        android:layout_marginLeft="170dp"
-        android:id="@+id/imageView" />
+    android:background="@drawable/bg1">
 
     <TextView
-        android:layout_width="300dp"
-        android:layout_height="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="Time is Life"
         android:id="@+id/app_name"
         android:gravity="center"
-        android:layout_marginTop="100dp"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentTop="true"
+        android:layout_gravity="center"
+        android:layout_marginTop="40dp"
         android:textSize="40sp"
-        android:textColor="@android:color/holo_green_light" />
+        android:textStyle="normal|bold"
+        android:textColor="@color/淺橘透明" />
     <TextView
         android:text="道路避讓即時警示系統"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/textView"
-        android:layout_below="@+id/app_name"
-        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:textColor="@android:color/black"
         android:textSize="20sp" />
 
-    <Button
-        android:text="救護車即將經過！！"
-        android:id="@+id/button3"
-        android:background="@drawable/btn2"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:layout_below="@+id/textView"
-        android:layout_alignStart="@+id/textView"
-        android:textColor="@android:color/background_light"
-        android:layout_marginTop="20dp"
-        android:textSize="20sp" />
-    <Button
-        android:text="系統尚未執行"
-        android:id="@+id/button2"
-        android:background="@drawable/btn1"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:layout_below="@+id/textView"
-        android:layout_alignStart="@+id/textView"
-        android:textColor="@android:color/background_light"
-        android:layout_marginTop="20dp"
-        android:textSize="20sp" />
 
-    <TextView
-        android:text="目前狀態："
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/textView2"
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp">
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="10dp">
 
-        android:layout_toEndOf="@+id/About_us"
-        android:layout_marginBottom="90dp"
-        android:layout_above="@+id/textView"
-        android:textColor="@android:color/black" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/mr_ic_close_dark"
+                android:layout_gravity="center"
+                android:layout_centerHorizontal="true"
+                android:id="@+id/hidden" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/mr_ic_close_dark"
+                android:layout_alignRight="@+id/hidden"
+                android:layout_marginRight="80dp"
+                android:id="@+id/hidden1" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/smallgreenbutton"
+                android:layout_gravity="center"
+                android:layout_alignRight="@+id/hidden"
+                android:layout_marginRight="80dp"
+                android:gravity="center"
 
-    <Switch
-        android:layout_width="wrap_content"
+                android:id="@+id/imageView2" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/smallredbutton"
+                android:layout_alignRight="@+id/hidden"
+                android:layout_marginRight="80dp"
+                android:id="@+id/imageView" />
+            <Switch
+                android:layout_width="130dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/switch1"
+                android:splitTrack="false"
+                android:switchMinWidth="55dp"
+                android:text="行駛狀態"
+                android:checked="false"
+                android:textSize="14sp"
+                android:layout_alignLeft="@+id/hidden1"
+                android:layout_marginLeft="40dp"
+                android:layout_gravity="center"
+                android:textColor="@android:color/black"
+                android:thumb="@drawable/switch_selector" />
+        </RelativeLayout>
+
+    </LinearLayout>
+    <!--
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="50dp"
+            android:background="@drawable/frame_shape">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/car_normal"
+                android:layout_marginTop="5dp"
+                android:layout_marginLeft="5dp"
+                android:id="@+id/character" />
+            <TextView
+                android:text="一般駕駛端"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView5"
+                android:layout_marginTop="60dp"
+                android:layout_marginRight="3dp"
+                android:textColor="@android:color/black"
+                android:background="@drawable/text_background"
+                />
+        </LinearLayout>
+        -->
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/switch1"
-        android:splitTrack="false"
-        android:switchMinWidth="50dp"
-        android:text="開始行駛"
-        android:checked="false"
-        android:layout_marginRight="80dp"
-        android:switchPadding="20dp"
-        android:layout_alignStart="@+id/textView2"
-        android:layout_marginBottom="50dp"
-        android:layout_above="@+id/textView"
-        android:textSize="14sp"
-        android:textColor="@android:color/black" />
+        android:layout_marginTop="70dp">
+            <Button
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:text="救護車即將經過！！"
+                android:id="@+id/button3"
+                android:background="@drawable/btn2"
+                android:textColor="@android:color/background_light"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:textSize="20sp" />
 
-
-</RelativeLayout>
+            <Button
+                android:text="系統尚未執行"
+                android:id="@+id/button2"
+                android:background="@drawable/btn1"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:textColor="@android:color/background_light"
+                android:textSize="20sp"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true" />
+    </RelativeLayout>
+</LinearLayout>
