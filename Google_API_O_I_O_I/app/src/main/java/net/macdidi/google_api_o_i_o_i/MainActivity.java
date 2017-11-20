@@ -159,14 +159,19 @@ public class MainActivity extends AppCompatActivity  {
             //警示狀態
             greenbutton.setVisibility(View.GONE);
             redbutton.setVisibility(View.VISIBLE);
-            mTts.speak("請點擊紅色按鈕查看位置，並盡速進行避讓", TextToSpeech.QUEUE_FLUSH, null,null);
+            if(GlobalVariable.is_MapActivity_open == true){}
+            else {
+                mTts.speak("請點擊紅色按鈕查看位置，並盡速進行避讓", TextToSpeech.QUEUE_FLUSH, null, null);
+            }
         }
     }
     private Button.OnClickListener openMapActivity = new Button.OnClickListener(){
         @Override
         public void onClick(View v) {
             //開啟地圖
-
+            Intent OpenMapActivity = new Intent();
+            OpenMapActivity.setClass(MainActivity.this,MapsActivity.class);
+            startActivity(OpenMapActivity);
         }
     };
     private Button.OnClickListener switch_colorChange = new Button.OnClickListener(){

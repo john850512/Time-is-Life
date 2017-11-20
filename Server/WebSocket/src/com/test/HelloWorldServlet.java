@@ -3,6 +3,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import javax.websocket.OnClose;
@@ -11,6 +15,10 @@ import javax.websocket.OnOpen;
 import javax.websocket.OnError;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
+import java.util.*;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 @ServerEndpoint("/websocket")
 public class HelloWorldServlet {
 	public static StringBuilder allPath = new StringBuilder();
@@ -18,7 +26,7 @@ public class HelloWorldServlet {
 	public static String webSessionID = new String();
 	public static Session webSession;
 	public static Session driverSession;
-	Map<Set<String>, Session> allSession = new HashMap<Set<String>, Session>();
+	public static LinkedList<Session> linkedList= new LinkedList<>();
 	
     @OnMessage
     public void onMessage(String message, Session session) throws Exception {
@@ -31,19 +39,24 @@ public class HelloWorldServlet {
     		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + message);
     		driverSession = session;	
     	}
-    	else if(message.startsWith("[web]gma")){ //來自web返回的導航路徑
+    	else if(message.startsWith("[web]gma")){ 
     		allPath.append(message.split("gma")[1]);
-    		System.out.println("[server]ReceiveFromWeb(SessionID:"+session.getId()+"):" + allPath.toString());
+    		System.out.println("[server]AllPath(SessionID:"+session.getId()+"):" + message.split("gma")[1]);
+    		System.out.println("[server]ReceiveFromWeb(SessionID:"+session.getId()+"):" + allPath.toString());   
+    		System.out.println("~~"+linkedList.size());   
+    		/*
+    		 * for (int i=0;i<linkedList.size();i++) {
+    			 if(linkedList.get(i)==webSession)  continue;
+    			 else  {
+    		    	 System.out.println("[server]SendToClient(SessionID:"+linkedList.get(i).getId()+"):" + allPath.toString());
+    		    	 linkedList.get(i).getBasicRemote().sendText("[allpath]"+allPath.toString());
+    		     }
+    		 }
+    		 */
     	}
-    	else if(message.startsWith("[web]chgDriverPos:")){ //來自web返回的傳送client自己位置
-    		driverSession.getBasicRemote().sendText(message); 
-    		System.out.println("[server]ReceiveFromWeb(SessionID:"+session.getId()+"):" + message);
-    		System.out.println("[server]SendToClient(SessionID:"+driverSession.getId()+"):" + message);
-    	}
-    	else if(message.split("]")[1].startsWith("navigation")){ //來自client的導航請求
-    		allSession.get(webSessionID).getBasicRemote().sendText(message);
-    		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + allPath.toString());
-    		System.out.println("[server]SendToWeb(SessionID:"+webSession.getId()+"):" + allPath.toString());
+    	else if(message.split("]")[1].startsWith("navigation")){ 
+    		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + message.split("]")[2]);  
+    		webSession.getBasicRemote().sendText(message); 
     	}
     	else if(message.split("]")[1].startsWith("delete navigation")){ //來自client的刪除導航路徑
     		int deleteID = Integer.parseInt(message.split(":")[1].split("]")[0]);
@@ -57,22 +70,36 @@ public class HelloWorldServlet {
     			if(Integer.parseInt(pathTemp[i]) != deleteID)
     				allPath.append("$"+pathTemp[i]+"$"+pathTemp[i+1]);
     		}
-    		//System.out.println("*"+allPath);
-
+    		session.getBasicRemote().sendText("[delete navigation]"+"OK"); 
     		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + message);
+    		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + allPath.toString());
     	}
-    	else if(message.split("]")[1].startsWith("request allpath")){ //來自client的請求導航路徑
-    		//session.getBasicRemote().sendText("This is the first server message"); 
+    	else if(message.split("]")[1].startsWith("request allpath")){
+            //session.getBasicRemote().sendText("This is the first server message"); 
     		session.getBasicRemote().sendText("[allpath]"+allPath.toString()); 
-    		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + message);
-    		System.out.println("[server]SendToClient(SessionID:"+session.getId()+"):[allpath]" + allPath.toString());
-    	}
-    	else if(message.split("]")[1].startsWith("request hospital")){ //
-    		Hospital.webcrawler();
-    		session.getBasicRemote().sendText("[hospital]"+allPath.toString()); 
     		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + message);
     		System.out.println("[server]SendToClient(SessionID:"+session.getId()+"):" + allPath.toString());
     	}
+    	else if(message.split("]")[1].startsWith("request hospital")){ 
+    		String hospital = "" ;
+    		System.out.println("HOSPITAL");
+    		FileReader fr = new FileReader("E:\\Java\\WebSocket\\WriteFileTest.txt");
+    		BufferedReader br = new BufferedReader(fr);
+    		while (br.ready()) {
+    			hospital+=br.readLine();
+    			System.out.println(br.readLine());
+    		}
+    		fr.close();   		
+    	    session.getBasicRemote().sendText("[hospital]"+hospital); 
+    		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + message);
+    		System.out.println("[server]SendToClient(SessionID:"+session.getId()+"):" + hospital);
+    	}
+    	else if(message.startsWith("[web]chgDriverPos:")){ //來自web返回的傳送client自己位置
+    		driverSession.getBasicRemote().sendText(message); 
+    		System.out.println("[server]ReceiveFromWeb(SessionID:"+session.getId()+"):" + message);
+    		System.out.println("[server]SendToClient(SessionID:"+driverSession.getId()+"):" + message);
+    	}
+    	
     	else if(message.split("]")[1].startsWith("send itselfPosition:")){ //來自client的傳送client自己位置
     		webSession.getBasicRemote().sendText(message); 
     		System.out.println("[server]ReceiveFromClient(SessionID:"+session.getId()+"):" + message);
@@ -84,19 +111,21 @@ public class HelloWorldServlet {
     		System.out.println("[server]SendToClient(SessionID:"+webSession.getId()+"):" + message);
     	}
     	else{
-    		
+    		System.out.println(session);
     	}
-    	
     }
 
     @OnOpen
-    public void onOpen(Session session) {
-        System.out.println("[server](SessionID:"+session.getId()+") connected");
+    public void onOpen(Session session) throws IOException {
+    	Session A = session;
+    	linkedList.add(A);	
+        System.out.println("[server](SessionID:"+session.getId()+") connected"+Integer.toString(linkedList.size()));
     }
 
     @OnClose
-    public void onClose() {
-        System.out.println("[server]Connection closed");
+    public void onClose(Session session) {
+    	linkedList.remove(session);	
+        System.out.println("[server]Connection closed"+Integer.toString(linkedList.size()));
     }
     @OnError
     public void OnError(Session session, Throwable t) {

@@ -146,7 +146,7 @@
 		var markerArray,directionsService,map,directionsDisplay,stepDisplay;
 		//websocket
 		//var webSocket = new WebSocket('ws://192.168.1.143:8080/WebSocket/websocket');
-		var webSocket = new WebSocket('ws://192.168.0.106:8080/WebSocket/websocket');
+		var webSocket = new WebSocket('ws://192.168.1.143:8080/WebSocket/websocket');
 		//navigation request
 		var navID = 1;
 		var originPos = "高雄大學";
@@ -174,13 +174,19 @@
 
 		function onMessage(event) {
 			//document.getElementById('warnings-panel').innerHTML +=event.data+"<br \>";
+			
 			if(event.data.split("]")[1].startsWith("navigation")){ //救護車的導航請求訊息
-				var navID = Integer.valueOf(event.data.split("$")[1]); //導航編號
-				idSet.add(navID);
-				document.getElementById('ambluance_num').innerHTML = idSet.size();
-				var originPos = message.split("$")[2].split(" ")[0]; //起點
-				var destinationPos = message.split("$")[2].split(" ")[1]; //終點
-				calculateAndDisplayRoute(directionsDisplay, directionsService, markerArray, stepDisplay, map);
+				webSocket.send('[web]test'+event.data);
+				var str ="";
+		    	str = event.data.split("]")[2];
+		    	webSocket.send('[web]test'+event.data.split("]")[2]);
+		    	navID = str.split(" ")[0];
+				var S = str.split(" ")[1];
+				var D = str.split(" ")[2];
+				calculateAndDisplayRoute_APP(directionsDisplay, directionsService, markerArray, stepDisplay, map,S,D);
+				webSocket.send('[web]test'+navID);
+				webSocket.send('[web]test'+S);
+				webSocket.send('[web]test'+D);
 			}
 			else if(event.data.split("]")[1].startsWith("send itselfPosition:")){ //一般車輛傳送當前位置的訊息
 				//範例訊息:
@@ -333,7 +339,38 @@
 			}
 		  });
 		}
-	
+		//~~APP導航用
+		function calculateAndDisplayRoute_APP(directionsDisplay, directionsService,
+			    markerArray, stepDisplay, map,S,D) {
+			  // First, remove any existing markers from the map.
+			  for (var i = 0; i < markerArray.length; i++) {
+				
+				if(i!=(markerArray.length-1)&&i % 2 == 0)continue;//更改同時也要改showSteps裡的marker設定
+			    markerArray[i].setMap(null);
+			  }
+			
+			  // Retrieve the start and end locations and create a DirectionsRequest using
+			  // WALKING directions.
+			  // 用走路的模式偵測
+			  // 用汽車會一直有微靠左行這種指令 點會變多
+			  directionsService.route({		
+			    origin: S,
+			    destination: D,
+			    travelMode: google.maps.TravelMode.DRIVING		    		   		    
+			  }, function(response, status) {
+			    // Route the directions and pass the response to a function to create
+			    // markers for each step.
+			    if (status === google.maps.DirectionsStatus.OK) {
+			      document.getElementById('warnings-panel').innerHTML =
+			          '<b>' + response.routes[0].warnings + '</b></br>';
+			      directionsDisplay.setDirections(response);
+			      showSteps(response, markerArray, stepDisplay, map);
+				  
+			    } else {
+			      window.alert('Directions request failed due to ' + status);
+			    }
+			  });
+			}
 		function showSteps(directionResult, markerArray, stepDisplay, map) {
 			  // For each step, place a marker, and add the text to the marker's infowindow.
 			  // Also attach the marker to an array so we can keep track of it and remove it

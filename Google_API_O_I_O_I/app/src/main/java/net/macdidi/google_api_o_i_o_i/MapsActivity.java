@@ -59,7 +59,9 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             id = 0;
             Lat = 0;
             Lng = 0;
+            path = new ArrayList<>();
         }
+        ArrayList<LatLng> path ;
         int id;//路徑編號
         double Lat;
         double Lng;
@@ -198,20 +200,20 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                     double between_direction_L=0;
                     double between_direction_L_next=0;
 
-                    for(int i = 0 ; i < GeoPoint.size() ; ) {
+                    for(int i = 0 ; i < GeoPoint.size() ; i++) {
                         boolean first_Point_flag = true;
-                        while (GeoPoint.get(i).id == current_ID) {//一條一條路徑畫
+                        for(int j=0 ; j<GeoPoint.get(i).path.size() ; j++){
                             //第一個點的mark
                             if (first_Point_flag == true) {
-                                StartPoint = new LatLng(GeoPoint.get(i).Lat, GeoPoint.get(i).Lng);
+                                StartPoint = new LatLng(GeoPoint.get(i).path.get(j).latitude, GeoPoint.get(i).path.get(j).longitude);
                                 first_Point_flag = false;
                                 int temp_distance = (int) D_jw(StartPoint.latitude, StartPoint.longitude, test_loaction.latitude, test_loaction.longitude);
 
                                 if (temp_distance < min_distance) {
                                     min_distance = temp_distance;
                                     //Ambulance Site to Car now
-                                    double between_Lat = GeoPoint.get(i).Lat - test_loaction.latitude;
-                                    double between_Lng = GeoPoint.get(i).Lng - test_loaction.longitude;
+                                    double between_Lat = GeoPoint.get(i).path.get(j).latitude - test_loaction.latitude;
+                                    double between_Lng = GeoPoint.get(i).path.get(j).longitude - test_loaction.longitude;
 
                                     //第一點前後方判斷  用內積公式
                                     double dot = between_Lat * Car_direction[0] + between_Lng * Car_direction[1];
@@ -237,8 +239,8 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
 
                                     //第二點前後方判斷  用內積公式
-                                    between_Lat = GeoPoint.get(i + 1).Lat - test_loaction.latitude;
-                                    between_Lng = GeoPoint.get(i + 1).Lng - test_loaction.longitude;
+                                    between_Lat = GeoPoint.get(i).path.get(j+1).latitude - test_loaction.latitude;
+                                    between_Lng = GeoPoint.get(i).path.get(j+1).longitude - test_loaction.longitude;
                                     dot = between_Lat * Car_direction[0] + between_Lng * Car_direction[1];
                                     Car_direction_L = Math.sqrt(Math.pow(Car_direction[0], 2) + Math.pow(Car_direction[1], 2));
                                     between_direction_L_next = Math.sqrt(Math.pow(between_Lat, 2) + Math.pow(between_Lng, 2));
@@ -262,10 +264,10 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
                             }
                             else {
-                                LatLng now_pos = new LatLng(GeoPoint.get(i).Lat, GeoPoint.get(i).Lng);
+                                LatLng now_pos = new LatLng(GeoPoint.get(i).path.get(j).latitude, GeoPoint.get(i).path.get(j).longitude);
                             }
-                            i++;//下一個點
-                            if (i == GeoPoint.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
+
+                            if (j == GeoPoint.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
                                 break;
                             }
                         }
@@ -326,19 +328,31 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         //地圖中心移到目前位置
         //Location location = locMgr.getLastKnownLocation(bestProv);
         //第一次用網路位而不是用gps，不然會return null
-        Location location = locMgr.getLastKnownLocation(NETWORK_PROVIDER);
-        LatLng cur_internet_location = new LatLng(location.getLatitude(),location.getLongitude());
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(cur_internet_location,13));//中心是起點
-
-        //如果不是第一次定位就移掉前一個mark，重新定位
-        if(!first_flag){
-            nowLocation_marker.remove();
+        if(GlobalVariable.is_simulateGPS == true){
+            test_loaction = Servicetest.temp;
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(test_loaction, 13));//中心是起點
+            //如果不是第一次定位就移掉前一個mark，重新定位
+            if (!first_flag) {
+                nowLocation_marker.remove();
+            }
+            first_flag = false;
+            nowLocation_marker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).position(test_loaction).title("目前位置"));
+            nowLocation_marker.setDraggable(true);
         }
-        first_flag = false;
-        nowLocation_marker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).position(cur_internet_location).title("目前位置"));
-        nowLocation_marker.setDraggable(true);
-        test_loaction =  cur_internet_location;
+        else {
+            Location location = locMgr.getLastKnownLocation(NETWORK_PROVIDER);
+            LatLng cur_internet_location = new LatLng(location.getLatitude(), location.getLongitude());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(cur_internet_location, 13));//中心是起點
 
+            //如果不是第一次定位就移掉前一個mark，重新定位
+            if (!first_flag) {
+                nowLocation_marker.remove();
+            }
+            first_flag = false;
+            nowLocation_marker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).position(cur_internet_location).title("目前位置"));
+            nowLocation_marker.setDraggable(true);
+            test_loaction = cur_internet_location;
+        }
         DrawLine();//畫出路線(之後要改成定時偵測是否有新路徑，然後更新)
     }
 
@@ -419,38 +433,38 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         //畫出路徑
         int current_ID = GlobalVariable.machineID;
         int min_distance = 9999999;
-        for(int i = 0 ; i < GeoPoint.size() ; ){
+        for(int i = 0 ; i < GeoPoint.size() ; i++){
             PolylineOptions polylineOpt = new PolylineOptions();//要畫出的線段
             /*如何判斷不同條的路徑資訊?
                             GeoPoint是一個資料結構，包含"所有路徑"(並非單一路徑)的經度Lng、緯度Lat還有路徑ID
                             每一條完整的路徑都應該具有一個路徑編號
                        */
             boolean first_Point_flag = true;
-            while(GeoPoint.get(i).id == current_ID){//一條一條路徑畫
-                Log.d("*****", i + " " + GeoPoint.get(i).id + " "+GeoPoint.get(i).Lng+","+GeoPoint.get(i).Lat);
+            for(int j=0 ; j<GeoPoint.get(i).path.size() ; j++){
+                //Log.d("*****", i + " " + GeoPoint.get(i).id + " "+GeoPoint.get(i).Lng+","+GeoPoint.get(i).Lat);
                 //第一個點的mark
                 if(first_Point_flag == true){
-                    StartPoint = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
+                    StartPoint = new LatLng(GeoPoint.get(i).path.get(j).latitude,GeoPoint.get(i).path.get(j).longitude);
                     mMap.addMarker(new MarkerOptions().position(StartPoint).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)).title("起點"));
                     first_Point_flag = false;
                     if( (int)D_jw(StartPoint.latitude,StartPoint.longitude,test_loaction.latitude,test_loaction.longitude) < min_distance)
                         min_distance = (int)D_jw(StartPoint.latitude,StartPoint.longitude,test_loaction.latitude,test_loaction.longitude);
                 }
-                //最後一個點的mark
-                if(i+1 == GeoPoint.size()){
-                    EndPoint = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
+                //最後一個點的mark    //if weird  j -> j+1
+                if(j+1 == GeoPoint.get(i).path.size()){
+                    EndPoint = new LatLng(GeoPoint.get(i).path.get(j).latitude,GeoPoint.get(i).path.get(j).longitude);
                     mMap.addMarker(new MarkerOptions().position(EndPoint).icon((BitmapDescriptorFactory.fromResource(R.drawable.hostipal))).title("終點"));
                 }
-                else if(GeoPoint.get(i+1).id != current_ID){
+                /*else if(GeoPoint.get(i+1).id != current_ID){
                     EndPoint = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
                     mMap.addMarker(new MarkerOptions().position(EndPoint).icon((BitmapDescriptorFactory.fromResource(R.drawable.hostipal))).title("終點"));
-                }
+                }*/
 
-                LatLng point = new LatLng(GeoPoint.get(i).Lat,GeoPoint.get(i).Lng);
+                LatLng point = new LatLng(GeoPoint.get(i).path.get(j).latitude,GeoPoint.get(i).path.get(j).longitude);
                 //Log.d("myTag",GeoPoint.get(i).Lng+ " " + GeoPoint.get(i).Lat+"\n");
                 polylineOpt.add(point);
-                i++;//下一個點
-                if(i == GeoPoint.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
+
+                if(j == GeoPoint.get(i).path.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
                     break;
                 }
             }
@@ -472,14 +486,14 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     public void onLocationChanged(Location location) {
         // 取得座標值:緯度,經度
         if(!GlobalVariable.is_simulateGPS) {
-                LatLng cur_location = new LatLng(location.getLatitude(), location.getLongitude());
-                //移掉前一個mark，重新定位
-                if(!first_flag){
-                    nowLocation_marker.remove();
-                }
-                first_flag = false;
-                nowLocation_marker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).position(cur_location).title("目前位置"));
-                nowLocation_marker.setDraggable(true);
+            LatLng cur_location = new LatLng(location.getLatitude(), location.getLongitude());
+            //移掉前一個mark，重新定位
+            if(!first_flag){
+                nowLocation_marker.remove();
+            }
+            first_flag = false;
+            nowLocation_marker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).position(cur_location).title("目前位置"));
+            nowLocation_marker.setDraggable(true);
         }
     }
     protected void onResume() {
@@ -549,18 +563,20 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                                         for(int j = 0 ;j < spiltGeoInfo.length ; ++j){
                                         Log.d("spiltGeoInfo",spiltGeoInfo[j]+"\n");
                                         }*/
-
+                    GeoInfo p = new GeoInfo();
+                    p.id = receiveID.get(i);
                     for(int j = 0 ; j < spiltGeoInfo.length ; ++j){
-                        GeoInfo p = new GeoInfo();
-                        p.id = receiveID.get(i);
+
                         //經緯度之間是用","作為分割
                         p.Lng = Double.parseDouble(spiltGeoInfo[j].split(",")[0]);
                         p.Lat = Double.parseDouble(spiltGeoInfo[j].split(",")[1]);
-                        GeoPoint.add(p);
+                        p.path.add(new LatLng(p.Lat,p.Lng));
+
                         //判斷距離
                         Single_Path_Point_Info.add(new LatLng(p.Lat,p.Lng));
                         //Log.d("myTag",GeoPoint.get(j).id+" " + GeoPoint.get(j).Lng+ " " + GeoPoint.get(j).Lat +"\n");
                     }
+                    GeoPoint.add(p);
                     DrawLine();
                 }
 
@@ -631,20 +647,20 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         double between_direction_L=0;
         double between_direction_L_next=0;
 
-        for(int i = 0 ; i < GeoPoint.size() ; ) {
+        for(int i = 0 ; i < GeoPoint.size() ; i++) {
             boolean first_Point_flag = true;
-            while (GeoPoint.get(i).id == current_ID) {//一條一條路徑畫
+            for(int j=0 ; j<GeoPoint.get(i).path.size() ; j++){//一條一條路徑畫
                 //第一個點的mark
                 if (first_Point_flag == true) {
-                    StartPoint = new LatLng(GeoPoint.get(i).Lat, GeoPoint.get(i).Lng);
+                    StartPoint = new LatLng(GeoPoint.get(i).path.get(j).latitude, GeoPoint.get(i).path.get(j).longitude);
                     first_Point_flag = false;
                     int temp_distance = (int) D_jw(StartPoint.latitude, StartPoint.longitude, test_loaction.latitude, test_loaction.longitude);
 
                     if (temp_distance < min_distance) {
                         min_distance = temp_distance;
                         //Ambulance Site to Car now
-                        double between_Lat = GeoPoint.get(i).Lat - test_loaction.latitude;
-                        double between_Lng = GeoPoint.get(i).Lng - test_loaction.longitude;
+                        double between_Lat = GeoPoint.get(i).path.get(j).latitude - test_loaction.latitude;
+                        double between_Lng = GeoPoint.get(i).path.get(j).longitude - test_loaction.longitude;
 
                         //第一點前後方判斷  用內積公式
                         double dot = between_Lat * Car_direction[0] + between_Lng * Car_direction[1];
@@ -670,8 +686,8 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
 
                         //第二點前後方判斷  用內積公式
-                        between_Lat = GeoPoint.get(i + 1).Lat - test_loaction.latitude;
-                        between_Lng = GeoPoint.get(i + 1).Lng - test_loaction.longitude;
+                        between_Lat = GeoPoint.get(i).path.get(j).latitude - test_loaction.latitude;
+                        between_Lng = GeoPoint.get(i).path.get(j).longitude - test_loaction.longitude;
                         dot = between_Lat * Car_direction[0] + between_Lng * Car_direction[1];
                         Car_direction_L = Math.sqrt(Math.pow(Car_direction[0], 2) + Math.pow(Car_direction[1], 2));
                         between_direction_L_next = Math.sqrt(Math.pow(between_Lat, 2) + Math.pow(between_Lng, 2));
@@ -695,10 +711,10 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
                 }
                 else {
-                    LatLng now_pos = new LatLng(GeoPoint.get(i).Lat, GeoPoint.get(i).Lng);
+                    LatLng now_pos = new LatLng(GeoPoint.get(i).path.get(j).latitude, GeoPoint.get(i).path.get(j).longitude);
                 }
-                i++;//下一個點
-                if (i == GeoPoint.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
+
+                if (j == GeoPoint.get(i).path.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
                     break;
                 }
             }

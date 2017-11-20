@@ -59,7 +59,9 @@ public class Servicetest extends Service implements TextToSpeech.OnInitListener,
             id = 0;
             Lat = 0;
             Lng = 0;
+            path = new ArrayList<>();
         }
+        ArrayList<LatLng> path ;
         int id;//路徑編號
         double Lat;
         double Lng;
@@ -73,7 +75,7 @@ public class Servicetest extends Service implements TextToSpeech.OnInitListener,
     public double tolerance;
     public static ArrayList<LatLng> Single_Path_Point_Info = new ArrayList<LatLng>();//isOnPathLocation Function的參數(一條路徑)
     private static boolean first_flag;//是否第一次定位
-
+    public static LatLng temp = new LatLng(0,0);
 
     @Override
     public void onInit(int status) {
@@ -229,32 +231,32 @@ public class Servicetest extends Service implements TextToSpeech.OnInitListener,
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                                //Toast.makeText(Servicetest.this,s,Toast.LENGTH_SHORT).show();
-                                //字串切割
-                                //Toast.makeText(Servicetest.this,s,Toast.LENGTH_SHORT).show();
-                                if(!s.equals("[allpath]")){
-                                    if (s.split("]")[0].equals("[allpath")) {
-                                        webSocket_input_allpath = s.split("]")[1];
+                            //Toast.makeText(Servicetest.this,s,Toast.LENGTH_SHORT).show();
+                            //字串切割
+                            //Toast.makeText(Servicetest.this,s,Toast.LENGTH_SHORT).show();
+                            if(!s.equals("[allpath]")){
+                                if (s.split("]")[0].equals("[allpath")) {
+                                    webSocket_input_allpath = s.split("]")[1];
+                                }
+                            }
+                            if(!s.equals("[hospital]")) {
+                                //Toast.makeText(Servicetest.this,webSocket_input_allpath,Toast.LENGTH_SHORT).show();
+                                if (s.split("]")[0].equals("[hospital"))
+                                    webSocket_input_hospital = s.split("]")[1];
+                                //Toast.makeText(Servicetest.this,webSocket_input,Toast.LENGTH_SHORT).show();
+                            }
+                            if (s.split(":")[0].equals("[web]chgDriverPos")){
+                                webSocket_input_chgDriverPos = s.split(":")[1];
+                                if(GlobalVariable.is_simulateGPS){
+                                    string_judge();
+                                    chgDriverPosFromWeb(webSocket_input_chgDriverPos);
+                                    if(GlobalVariable.is_MapActivity_open == true) {
+                                        MapsActivity.chgDriverPosFromWeb(webSocket_input_chgDriverPos);
                                     }
                                 }
-                                if(!s.equals("[hospital]")) {
-                                    //Toast.makeText(Servicetest.this,webSocket_input_allpath,Toast.LENGTH_SHORT).show();
-                                    if (s.split("]")[0].equals("[hospital"))
-                                        webSocket_input_hospital = s.split("]")[1];
-                                    //Toast.makeText(Servicetest.this,webSocket_input,Toast.LENGTH_SHORT).show();
-                                }
-                                if (s.split(":")[0].equals("[web]chgDriverPos")){
-                                    webSocket_input_chgDriverPos = s.split(":")[1];
-                                    if(GlobalVariable.is_simulateGPS){
-                                        string_judge();
-                                        chgDriverPosFromWeb(webSocket_input_chgDriverPos);
-                                        if(GlobalVariable.is_MapActivity_open == true) {
-                                            chgDriverPosFromWeb(webSocket_input_chgDriverPos);
-                                        }
-                                    }
-                                }
-                                Log.d("tag", s);
-                                //服务端消息
+                            }
+                            Log.d("tag", s);
+                            //服务端消息
                                 /*
                                                                 initmsg += s + "\n";
                                                                 Message msg = new Message();
@@ -320,18 +322,19 @@ public class Servicetest extends Service implements TextToSpeech.OnInitListener,
                                         for(int j = 0 ;j < spiltGeoInfo.length ; ++j){
                                         Log.d("spiltGeoInfo",spiltGeoInfo[j]+"\n");
                                         }*/
-
+            GeoInfo p = new GeoInfo();
+            p.id = receiveID.get(i);
             for (int j = 0; j < spiltGeoInfo.length; ++j) {
-                GeoInfo p = new GeoInfo();
-                p.id = receiveID.get(i);
                 //經緯度之間是用","作為分割
                 p.Lng = Double.parseDouble(spiltGeoInfo[j].split(",")[0]);
                 p.Lat = Double.parseDouble(spiltGeoInfo[j].split(",")[1]);
-                GeoPoint.add(p);
+                p.path.add(new LatLng(p.Lat,p.Lng));
+
                 //判斷距離
                 Single_Path_Point_Info.add(new LatLng(p.Lat, p.Lng));
                 //Log.d("myTag",GeoPoint.get(j).id+" " + GeoPoint.get(j).Lng+ " " + GeoPoint.get(j).Lat +"\n");
             }
+            GeoPoint.add(p);
         }
     }
 
@@ -340,7 +343,7 @@ public class Servicetest extends Service implements TextToSpeech.OnInitListener,
         //Ex:(120.123,23.123)
         String Lat = webSocket_input_chgDriverPos.split("\\(")[1].split(",")[0];
         String Lng = webSocket_input_chgDriverPos.split(",")[1].split("\\)")[0];
-        LatLng temp = new LatLng(Double.parseDouble(Lat),Double.parseDouble(Lng));
+        temp = new LatLng(Double.parseDouble(Lat),Double.parseDouble(Lng));
         Log.d("myTag",temp.latitude + " " + temp.longitude);
         //計算向量(判斷方向)
         if (!temp.equals(test_loaction)){ //位置有更新過
@@ -366,21 +369,23 @@ public class Servicetest extends Service implements TextToSpeech.OnInitListener,
 
         double between_direction_L=0;
         double between_direction_L_next=0;
+        Log.d("myTag","before for");
 
-        for(int i = 0 ; i < GeoPoint.size() ; ) {
+        for(int i = 0 ; i < GeoPoint.size() ; i++) {
             boolean first_Point_flag = true;
-            while (GeoPoint.get(i).id == current_ID) {//一條一條路徑畫
+            //Log.d("myTag","i");
+            for(int j=0 ; j<GeoPoint.get(i).path.size() ; j++){
                 //第一個點的mark
                 if (first_Point_flag == true) {
-                    StartPoint = new LatLng(GeoPoint.get(i).Lat, GeoPoint.get(i).Lng);
+                    StartPoint = new LatLng(GeoPoint.get(i).path.get(j).latitude, GeoPoint.get(i).path.get(j).longitude);
                     first_Point_flag = false;
                     int temp_distance = (int) D_jw(StartPoint.latitude, StartPoint.longitude, test_loaction.latitude, test_loaction.longitude);
 
                     if (temp_distance < min_distance) {
                         min_distance = temp_distance;
                         //Ambulance Site to Car now
-                        double between_Lat = GeoPoint.get(i).Lat - test_loaction.latitude;
-                        double between_Lng = GeoPoint.get(i).Lng - test_loaction.longitude;
+                        double between_Lat = GeoPoint.get(i).path.get(j).latitude - test_loaction.latitude;
+                        double between_Lng = GeoPoint.get(i).path.get(j).longitude - test_loaction.longitude;
 
                         //第一點前後方判斷  用內積公式
                         double dot = between_Lat * Car_direction[0] + between_Lng * Car_direction[1];
@@ -406,8 +411,8 @@ public class Servicetest extends Service implements TextToSpeech.OnInitListener,
 
 
                         //第二點前後方判斷  用內積公式
-                        between_Lat = GeoPoint.get(i + 1).Lat - test_loaction.latitude;
-                        between_Lng = GeoPoint.get(i + 1).Lng - test_loaction.longitude;
+                        between_Lat = GeoPoint.get(i).path.get(j+1).latitude - test_loaction.latitude;
+                        between_Lng = GeoPoint.get(i).path.get(j+1).longitude - test_loaction.longitude;
                         dot = between_Lat * Car_direction[0] + between_Lng * Car_direction[1];
                         Car_direction_L = Math.sqrt(Math.pow(Car_direction[0], 2) + Math.pow(Car_direction[1], 2));
                         between_direction_L_next = Math.sqrt(Math.pow(between_Lat, 2) + Math.pow(between_Lng, 2));
@@ -431,10 +436,10 @@ public class Servicetest extends Service implements TextToSpeech.OnInitListener,
 
                 }
                 else {
-                    LatLng now_pos = new LatLng(GeoPoint.get(i).Lat, GeoPoint.get(i).Lng);
+                    LatLng now_pos = new LatLng(GeoPoint.get(i).path.get(j).latitude, GeoPoint.get(i).path.get(j).longitude);
                 }
-                i++;//下一個點
-                if (i == GeoPoint.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
+
+                if (j == GeoPoint.get(i).path.size()) {//最後一個點的判斷會throwIndexOutOfBoundsException
                     break;
                 }
             }
