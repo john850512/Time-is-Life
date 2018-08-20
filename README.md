@@ -21,7 +21,7 @@
 - `一般駕駛客戶端`:一般車輛客戶端會向伺服器端索取救護車的導航路徑資訊，並根據本身所在位置判斷自己是否位於該導航路徑附近，如果是的話就會發出警報，提醒駕駛者及早進行道路避讓。
 
 ## System flow
-
+<img src="./IMG/11.png" height="400" width="500" align = "center"><img src="./IMG/12.png" height="400" width="500" align = "center">
 ## How to Start
 `Google_API_O_I_O_I` folder is android studio folder, just open android studio and import it.
 
@@ -32,7 +32,7 @@
 - Java(EE) / Javascript / Html
 - WebSocket IO API / Google Map API
 
-### Environment require
+#### Environment require
 1. tomcat v7.0
 2. J2EE
 3. JDK v1.7
