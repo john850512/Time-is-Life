@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Time is Life</string>
+    <string name="app_name">Time is Life(汽車端)</string>
     <string name="title_activity_maps">Time is Life</string>
     <drawable name="clr_normal">#e1e1e1</drawable>
     <drawable name="clr_pressed">#535353</drawable>

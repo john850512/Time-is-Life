@@ -8,6 +8,7 @@
     android:orientation="vertical"
     tools:context="net.macdidi.google_api_o_i_o_i.MainActivity"
     android:background="@drawable/bg1">
+
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
@@ -43,14 +44,14 @@
             android:id="@+id/map"
             tools:context=".MapsActivity"
             android:name="com.google.android.gms.maps.SupportMapFragment" />
-    </LinearLayout>
 
-    <Button android:text = "顯示"
-        android:id="@+id/btn"
-        android:layout_width="match_parent"
+
+    </LinearLayout>
+    <ImageView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        />
+        app:srcCompat="@drawable/amb_1"
+        android:id="@+id/imageView3"
+        android:layout_weight="1" />
+
 </LinearLayout>

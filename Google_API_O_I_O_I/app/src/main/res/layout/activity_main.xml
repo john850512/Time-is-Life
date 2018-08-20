@@ -7,7 +7,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="net.macdidi.google_api_o_i_o_i.MainActivity"
-    android:background="@drawable/bg1">
+    android:background="@drawable/bg1"
+    android:weightSum="1">
 
     <TextView
         android:layout_width="wrap_content"
@@ -70,7 +71,7 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:srcCompat="@drawable/smallredbutton"
+                app:srcCompat="@drawable/smallgraybutton"
                 android:layout_alignRight="@+id/hidden"
                 android:layout_marginRight="80dp"
                 android:id="@+id/imageView" />
@@ -123,28 +124,31 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="70dp">
+        android:layout_height="250dp"
+        android:layout_marginTop="70dp"
+        android:layout_weight="0.23">
             <Button
                 android:layout_width="200dp"
                 android:layout_height="200dp"
-                android:text="救護車即將經過！！"
+                android:text="救護車即將經過！"
                 android:id="@+id/button3"
-                android:background="@drawable/btn2"
+                android:background="@drawable/btn4"
                 android:textColor="@android:color/background_light"
                 android:layout_centerHorizontal="true"
                 android:layout_centerVertical="true"
-                android:textSize="20sp" />
+                android:textSize="22sp"
+                android:textStyle="normal|bold" />
 
             <Button
                 android:text="系統尚未執行"
                 android:id="@+id/button2"
-                android:background="@drawable/btn1"
+                android:background="@drawable/btn3"
                 android:layout_width="200dp"
                 android:layout_height="200dp"
                 android:textColor="@android:color/background_light"
-                android:textSize="20sp"
+                android:textSize="22sp"
                 android:layout_centerVertical="true"
-                android:layout_centerHorizontal="true" />
+                android:layout_centerHorizontal="true"
+                android:textStyle="normal|bold" />
     </RelativeLayout>
 </LinearLayout>

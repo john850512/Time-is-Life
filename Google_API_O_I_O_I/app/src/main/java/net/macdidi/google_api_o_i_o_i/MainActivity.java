@@ -28,6 +28,7 @@ import android.widget.Toast;
 
 import java.util.Locale;
 
+import static net.macdidi.google_api_o_i_o_i.GlobalVariable.cur_stat;
 import static net.macdidi.google_api_o_i_o_i.GlobalVariable.hintContentText;
 import static net.macdidi.google_api_o_i_o_i.GlobalVariable.hintContentTitle;
 import static net.macdidi.google_api_o_i_o_i.GlobalVariable.hintText;
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity  {
         redbutton = (Button)findViewById(R.id.button3);//Center Circle Button
         redbutton.setOnClickListener(openMapActivity);
         greenbutton= (Button)findViewById(R.id.button2);//Center Circle Button
+        greenbutton.setOnClickListener(openMapActivity);
         greenbutton.setVisibility(View.VISIBLE);
         redbutton.setVisibility(View.INVISIBLE);
 
@@ -75,7 +77,6 @@ public class MainActivity extends AppCompatActivity  {
         smallgreen = (ImageView) findViewById(R.id.imageView2);
         switch1 = (Switch)findViewById(R.id.switch1);
         switch1.setOnClickListener(switch_colorChange);
-        GlobalVariable.cur_stat = -1;//當前狀態
 
         //tts
         Intent checkIntent = new Intent();
@@ -86,7 +87,7 @@ public class MainActivity extends AppCompatActivity  {
                 if (status == TextToSpeech.SUCCESS) {
                     int result = mTts.setLanguage(Locale.CHINA);
                     mTts.setSpeechRate(GlobalVariable.speakRate);
-                    mTts.speak("歡迎使用道路避讓即時警示系統，請點擊按鈕開啟功能", TextToSpeech.QUEUE_FLUSH, null,null);
+                    mTts.speak("歡迎使用道路避讓即時警示系統，請點擊按鈕開啟功能", TextToSpeech.QUEUE_FLUSH, null, null);
                     if (result == TextToSpeech.LANG_MISSING_DATA
                             || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                         Toast.makeText(MainActivity.this, "語音系統發生錯誤", Toast.LENGTH_LONG).show();
@@ -101,7 +102,6 @@ public class MainActivity extends AppCompatActivity  {
         } else {
             ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
-
     }
     //actionbar menu
     @Override
@@ -150,19 +150,15 @@ public class MainActivity extends AppCompatActivity  {
         return fir_write;
     }
     public static void change_cur_state(){
-        if(GlobalVariable.cur_stat == 0) {
+        if(cur_stat == 0) {
             //正常狀態
             greenbutton.setVisibility(View.VISIBLE);
-            redbutton.setVisibility(View.GONE);
+            redbutton.setVisibility(View.INVISIBLE);
         }
-        else if(GlobalVariable.cur_stat == 1){
+        else if(cur_stat == 1){
             //警示狀態
-            greenbutton.setVisibility(View.GONE);
+            greenbutton.setVisibility(View.INVISIBLE);
             redbutton.setVisibility(View.VISIBLE);
-            if(GlobalVariable.is_MapActivity_open == true){}
-            else {
-                mTts.speak("請點擊紅色按鈕查看位置，並盡速進行避讓", TextToSpeech.QUEUE_FLUSH, null, null);
-            }
         }
     }
     private Button.OnClickListener openMapActivity = new Button.OnClickListener(){
@@ -181,8 +177,8 @@ public class MainActivity extends AppCompatActivity  {
                 //Toast.makeText(MainActivity.this,"YES",Toast.LENGTH_SHORT).show();
                 // int id = getResources().getIdentifier("@drawable/" + "smallgreenbutton.png", null, getPackageName());
                 //red_green_switch.setImageResource(id);
-                GlobalVariable.cur_stat = 0;
-                smallred.setVisibility(View.GONE);
+                cur_stat = 0;
+                smallred.setVisibility(View.INVISIBLE);
                 smallgreen.setVisibility(View.VISIBLE);
                 //switch1.setText("結束行駛");
                 greenbutton.setText("系統正常執行中");
@@ -197,11 +193,11 @@ public class MainActivity extends AppCompatActivity  {
                 //int id = getResources().getIdentifier("@drawable/" + "smallredbutton.png", null, getPackageName());
                 //red_green_switch.setImageResource(id);
 
-                GlobalVariable.cur_stat = -1;
+                cur_stat = -1;
                 smallred.setVisibility(View.VISIBLE);
-                smallgreen.setVisibility(View.GONE);
+                smallgreen.setVisibility(View.INVISIBLE);
                 greenbutton.setVisibility(View.VISIBLE);
-                redbutton.setVisibility(View.GONE);
+                redbutton.setVisibility(View.INVISIBLE);
                 //switch1.setText("開始行駛");
                 greenbutton.setText("系統尚未執行");
                 //發送關閉連線的訊息
@@ -230,7 +226,7 @@ public class MainActivity extends AppCompatActivity  {
             Notification.BigPictureStyle BigPicture = new Notification.BigPictureStyle();
             BigPicture.setBigContentTitle(hintText);
             //先來設定顯示的大圖片
-            Bitmap bitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.test)).getBitmap();
+            Bitmap bitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.ambulancebigpic)).getBitmap();
             //丟進去
             BigPicture.bigPicture(bitmap);
             notification = new Notification.Builder(MainActivity.this)
@@ -300,8 +296,8 @@ public class MainActivity extends AppCompatActivity  {
             public void onAnimationRepeat(Animation arg0) {}
             @Override
             public void onAnimationEnd(Animation arg0) {
-                if(GlobalVariable.cur_stat == 1) animateButton_red();
-                else if(GlobalVariable.cur_stat == 0) animateButton_green();
+                if(cur_stat == 1) animateButton_red();
+                else if(cur_stat == 0) animateButton_green();
             }
         });
     }
@@ -326,8 +322,8 @@ public class MainActivity extends AppCompatActivity  {
             public void onAnimationRepeat(Animation arg0) {}
             @Override
             public void onAnimationEnd(Animation arg0) {
-                if(GlobalVariable.cur_stat == 0) animateButton_green();
-                else if(GlobalVariable.cur_stat == 1)  animateButton_red();
+                if(cur_stat == 0) animateButton_green();
+                else if(cur_stat == 1)  animateButton_red();
             }
         });
     }
