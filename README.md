@@ -1,5 +1,5 @@
 
-# Time is Life - 道路避讓及時警示系統
+# Time is Life - 道路避讓即時警示系統
 <img src="./IMG/01.png" height="350" width="230" align = "left">
 
 ## Description
