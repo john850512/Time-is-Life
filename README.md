@@ -26,7 +26,7 @@
 
 <img src="./IMG/04.png" height="350" width="230" align = "center">
 
-## Wen-Demo Display
+## Web-Demo Display
 
 由於我們無法實際上進行相關的功能測試，透過WebSocket IO開發了一個網站，可以即時模擬汽車駕駛和救護車的相對位置(透過滑鼠拖曳網站上的icon)，改變彼此的GPS位置並觀察APP實際上是否產生對應的警示訊息。
 <img src="./IMG/10.png" height="500" width="900" align = "center">
